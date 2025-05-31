@@ -11,6 +11,9 @@ import (
 type OfdConnector interface {
 	FiscalDriveList(context.Context) ([]FiscalDriveReaderInfo, error)
 	SetFactoryID(factoryID string)
+
+	OpenZreport(ctx context.Context, createdTime string) error
+	CloseZreport(ctx context.Context, closedTime string) error
 	// Add methods as needed
 }
 
