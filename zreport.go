@@ -10,6 +10,10 @@ import (
 	"github.com/billz-2/ofd_connector/pkg/httpclient"
 )
 
+type indexInfo struct {
+	Index uint32 `json:"Index"`
+}
+
 type ZReportInfo struct {
 	TerminalID       string      `json:"TerminalID"`
 	OpenTime         string      `json:"OpenTime"`
@@ -111,4 +115,52 @@ func (o *ofdConnector) CloseZreport(ctx context.Context, closedTime string) erro
 	}
 
 	return nil
+}
+
+// ZReportInfo returns the Zreport info for the fiscal drive
+// index 0-current zReport, 1-previous zReport, 2-before previous zReport, etc.
+func (o *ofdConnector) ZReportInfo(ctx context.Context, index uint32) (ZReportInfo, error) {
+	if o.factoryID == "" {
+		return ZReportInfo{}, fmt.Errorf("factoryID cannot be empty")
+	}
+
+	if index < 0 {
+		return ZReportInfo{}, fmt.Errorf("index cannot be negative")
+	}
+
+	bodyBytes, err := json.Marshal(indexInfo{Index: index})
+	if err != nil {
+		return ZReportInfo{}, fmt.Errorf("error marshalling body: %s", err.Error())
+	}
+
+	endpoint := fmt.Sprintf("%s/FiscalDrive/ZReport/Info/%s", o.serviceAddress, o.factoryID)
+	req, err := httpclient.NewHTTPRequest(
+		endpoint,
+		http.MethodGet,
+		ContentTypeUrlEncoded,
+		bodyBytes,
+		nil,
+	)
+	if err != nil {
+		return ZReportInfo{}, fmt.Errorf("error creating request: %s", err.Error())
+	}
+
+	resp := o.httpClient.Request(ctx, req)
+	if resp.StatusCode != http.StatusOK {
+		errorResp := errorResponse{}
+		if err := json.Unmarshal(resp.Body, &errorResp); err != nil {
+			return ZReportInfo{}, fmt.Errorf("error unmarshalling error response: %s responseBody: %s",
+				err.Error(),
+				string(resp.Body),
+			)
+		}
+
+		return ZReportInfo{}, fmt.Errorf("failed to get Z report info: %s", errorResp.Reason)
+	}
+
+	zReportInfo := ZReportInfo{}
+	if err := json.Unmarshal(resp.Body, &zReportInfo); err != nil {
+		return ZReportInfo{}, fmt.Errorf("error unmarshalling response: %s", err.Error())
+	}
+	return zReportInfo, nil
 }
