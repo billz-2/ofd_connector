@@ -329,3 +329,79 @@ func TestGetReceiptInfoFail(t *testing.T) {
 	assert.ErrorContains(t, err, bodyResponse.Reason)
 
 }
+
+func TestGetDatabaseFilesCountSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+	const (
+		factoryID = "12342131231223123123"
+	)
+
+	databaseFilesCount := map[string]int64{factoryID: 12}
+
+	statusFilter := statusData{Status: 0}
+	statusBody, err := json.Marshal(statusFilter)
+	require.NoError(t, err)
+	req, err := httpclient.NewHTTPRequest(
+		"localhost:1234/FiscalDrive/Receipt/Database/Files/Count",
+		http.MethodPost,
+		constants.ContentTypeUrlEncoded,
+		statusBody,
+		nil,
+	)
+	require.NoError(t, err)
+	body, err := json.Marshal(databaseFilesCount)
+	require.NoError(t, err)
+	httpClient.EXPECT().Request(gomock.Any(), req).
+		Return(&httpclient.HTTPResponse{
+			Body:       body,
+			StatusCode: http.StatusOK,
+		}).Times(1)
+	receipt := &receipt{
+		httpClient:     httpClient,
+		serviceAddress: "localhost:1234",
+		factoryID:      factoryID,
+	}
+	countRes, err := receipt.GetDatabaseFilesCount(ctx, statusFilter.Status)
+	require.NoError(t, err)
+	require.Len(t, countRes, 1)
+	assert.Equal(t, databaseFilesCount[factoryID], countRes[factoryID])
+}
+
+func TestGetDatabaseFilesCountFail(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+	const (
+		factoryID = "12342131231223123123"
+	)
+	statusFilter := statusData{Status: 0}
+	statusBody, err := json.Marshal(statusFilter)
+	require.NoError(t, err)
+	req, err := httpclient.NewHTTPRequest(
+		"localhost:1234/FiscalDrive/Receipt/Database/Files/Count",
+		http.MethodPost,
+		constants.ContentTypeUrlEncoded,
+		statusBody,
+		nil,
+	)
+	require.NoError(t, err)
+	bodyResponse := errorResponse{
+		Reason: "no card found",
+		Type:   "errors.errorString",
+	}
+	body, err := json.Marshal(bodyResponse)
+	require.NoError(t, err)
+	httpClient.EXPECT().Request(gomock.Any(), req).
+		Return(&httpclient.HTTPResponse{
+			Body:       body,
+			StatusCode: http.StatusNotFound,
+		}).Times(1)
+	receipt := &receipt{
+		httpClient:     httpClient,
+		serviceAddress: "localhost:1234",
+		factoryID:      factoryID,
+	}
+	_, err = receipt.GetDatabaseFilesCount(ctx, statusFilter.Status)
+	require.Error(t, err)
+	assert.ErrorContains(t, err, bodyResponse.Reason)
+}

@@ -14,6 +14,7 @@ type ReceiptI interface {
 	GetTXID(ctx context.Context, req SaleParams) (int64, error)
 	RegisterTXID(ctx context.Context, txID int64) (ReceiptInfo, error)
 	GetReceiptInfo(ctx context.Context, index uint32) (ReceiptFullInfo, error)
+	GetDatabaseFilesCount(ctx context.Context, status uint16) (map[string]int64, error)
 }
 
 type receiptConfigs struct {
@@ -247,4 +248,46 @@ func (r *receipt) GetReceiptInfo(ctx context.Context, index uint32) (ReceiptFull
 		return ReceiptFullInfo{}, fmt.Errorf("error unmarshalling response: %s", err.Error())
 	}
 	return receiptFullInfo, nil
+}
+
+type statusData struct {
+	Status uint16 `json:"Status"`
+}
+
+func (r *receipt) GetDatabaseFilesCount(ctx context.Context, status uint16) (map[string]int64, error) {
+	statusReq := statusData{Status: status}
+	bodyBytes, err := json.Marshal(statusReq)
+	if err != nil {
+		return nil, fmt.Errorf("error marshalling body: %s", err.Error())
+	}
+	endpoint := fmt.Sprintf("%s/FiscalDrive/Receipt/Database/Files/Count", r.serviceAddress)
+	req, err := httpclient.NewHTTPRequest(
+		endpoint,
+		http.MethodPost,
+		constants.ContentTypeUrlEncoded,
+		bodyBytes,
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %s", err.Error())
+	}
+
+	resp := r.httpClient.Request(ctx, req)
+	if resp.StatusCode != http.StatusOK {
+		errorResp := errorResponse{}
+		if err := json.Unmarshal(resp.Body, &errorResp); err != nil {
+			return nil, fmt.Errorf("error unmarshalling error response: %s responseBody: %s",
+				err.Error(),
+				string(resp.Body),
+			)
+		}
+		return nil, fmt.Errorf("failed to get db files count: %s", errorResp.Reason)
+	}
+
+	filesCount := map[string]int64{}
+	if err := json.Unmarshal(resp.Body, &filesCount); err != nil {
+		return nil, fmt.Errorf("error unmarshalling response: %s", err.Error())
+	}
+
+	return filesCount, nil
 }
