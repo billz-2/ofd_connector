@@ -13,6 +13,7 @@ import (
 type ReceiptI interface {
 	GetTXID(ctx context.Context, req SaleParams) (int64, error)
 	RegisterTXID(ctx context.Context, txID int64) (ReceiptInfo, error)
+	GetReceiptInfo(ctx context.Context, index uint32) (ReceiptFullInfo, error)
 }
 
 type receiptConfigs struct {
@@ -105,6 +106,7 @@ type ReceiptInfo struct {
 }
 
 type ReceiptFullInfo struct {
+	Extra         string `json:"Extra"`
 	TerminalID    string `json:"TerminalID"`
 	ReceiptSeq    int    `json:"ReceiptSeq"`
 	Time          string `json:"Time"`
@@ -115,6 +117,7 @@ type ReceiptFullInfo struct {
 	ReceivedCard  int64  `json:"ReceivedCard"`
 	TotalVAT      int64  `json:"TotalVAT"`
 	ItemsCount    int    `json:"ItemsCount"`
+	ItemsHash     string `json:"ItemsHash"`
 }
 
 type TotalAmount struct {
@@ -207,4 +210,41 @@ func (r *receipt) RegisterTXID(ctx context.Context, txID int64) (ReceiptInfo, er
 	}
 
 	return receiptInfo, nil
+}
+
+func (r *receipt) GetReceiptInfo(ctx context.Context, index uint32) (ReceiptFullInfo, error) {
+	bodyBytes, err := json.Marshal(indexInfo{Index: index})
+	if err != nil {
+		return ReceiptFullInfo{}, fmt.Errorf("error marshalling body: %s", err.Error())
+	}
+	endpoint := fmt.Sprintf("%s/FiscalDrive/Receipt/Info/%s", r.serviceAddress, r.factoryID)
+	req, err := httpclient.NewHTTPRequest(
+		endpoint,
+		http.MethodPost,
+		constants.ContentTypeUrlEncoded,
+		bodyBytes,
+		nil,
+	)
+	if err != nil {
+		return ReceiptFullInfo{}, fmt.Errorf("error creating request: %s", err.Error())
+	}
+
+	resp := r.httpClient.Request(ctx, req)
+	if resp.StatusCode != http.StatusOK {
+		errorResp := errorResponse{}
+		if err := json.Unmarshal(resp.Body, &errorResp); err != nil {
+			return ReceiptFullInfo{}, fmt.Errorf("error unmarshalling error response: %s responseBody: %s",
+				err.Error(),
+				string(resp.Body),
+			)
+		}
+
+		return ReceiptFullInfo{}, fmt.Errorf("failed to get Z report info: %s", errorResp.Reason)
+	}
+
+	receiptFullInfo := ReceiptFullInfo{}
+	if err := json.Unmarshal(resp.Body, &receiptFullInfo); err != nil {
+		return ReceiptFullInfo{}, fmt.Errorf("error unmarshalling response: %s", err.Error())
+	}
+	return receiptFullInfo, nil
 }

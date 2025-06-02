@@ -216,7 +216,7 @@ func TestRegisterTXIDFail(t *testing.T) {
 			Body:       body,
 			StatusCode: http.StatusNotFound,
 		}).Times(1)
-		
+
 	receipt := &receipt{
 		httpClient:     httpClient,
 		serviceAddress: "localhost:1234",
@@ -225,4 +225,107 @@ func TestRegisterTXIDFail(t *testing.T) {
 	_, err = receipt.RegisterTXID(ctx, txID)
 	require.Error(t, err)
 	assert.ErrorContains(t, err, bodyResponse.Reason)
+}
+
+func TestGetReceiptInfo(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+	const (
+		factoryID = "12342131231223123123"
+		index     = uint32(0)
+	)
+	receiptInfoRes := ReceiptFullInfo{
+		Time:          "2023-01-01 00:00:00",
+		TerminalID:    "1234567890",
+		ReceiptSeq:    12,
+		FiscalSign:    "00000000000",
+		ItemsCount:    12,
+		ItemsHash:     "213123r324123213",
+		TotalVAT:      1221,
+		ReceivedCash:  12,
+		ReceivedCard:  34123,
+		ReceiptType:   "Purchase",
+		OperationType: "Cash",
+	}
+
+	indexData := indexInfo{Index: index}
+	indexBody, err := json.Marshal(indexData)
+	require.NoError(t, err)
+	req, err := httpclient.NewHTTPRequest(
+		"localhost:1234/FiscalDrive/Receipt/Info/"+factoryID,
+		http.MethodPost,
+		constants.ContentTypeUrlEncoded,
+		indexBody,
+		nil,
+	)
+	require.NoError(t, err)
+
+	body, err := json.Marshal(receiptInfoRes)
+	require.NoError(t, err)
+	httpClient.EXPECT().Request(gomock.Any(), req).
+		Return(&httpclient.HTTPResponse{
+			Body:       body,
+			StatusCode: http.StatusOK,
+		}).Times(1)
+
+	receipt := &receipt{
+		httpClient:     httpClient,
+		serviceAddress: "localhost:1234",
+		factoryID:      factoryID,
+	}
+
+	receiptInfo, err := receipt.GetReceiptInfo(ctx, index)
+	require.NoError(t, err)
+	assert.Equal(t, receiptInfoRes.TerminalID, receiptInfo.TerminalID)
+	assert.Equal(t, receiptInfoRes.Time, receiptInfo.Time)
+	assert.Equal(t, receiptInfoRes.ReceiptSeq, receiptInfo.ReceiptSeq)
+	assert.Equal(t, receiptInfoRes.FiscalSign, receiptInfo.FiscalSign)
+	assert.Equal(t, receiptInfoRes.ItemsCount, receiptInfo.ItemsCount)
+	assert.Equal(t, receiptInfoRes.ItemsHash, receiptInfo.ItemsHash)
+	assert.Equal(t, receiptInfoRes.TotalVAT, receiptInfo.TotalVAT)
+	assert.Equal(t, receiptInfoRes.ReceivedCash, receiptInfo.ReceivedCash)
+	assert.Equal(t, receiptInfoRes.ReceivedCard, receiptInfo.ReceivedCard)
+	assert.Equal(t, receiptInfoRes.ReceiptType, receiptInfo.ReceiptType)
+	assert.Equal(t, receiptInfoRes.OperationType, receiptInfo.OperationType)
+}
+
+func TestGetReceiptInfoFail(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+	const (
+		factoryID = "12342131231223123123"
+		index     = uint32(0)
+	)
+	indexData := indexInfo{Index: index}
+	indexBody, err := json.Marshal(indexData)
+	require.NoError(t, err)
+	req, err := httpclient.NewHTTPRequest(
+		"localhost:1234/FiscalDrive/Receipt/Info/"+factoryID,
+		http.MethodPost,
+		constants.ContentTypeUrlEncoded,
+		indexBody,
+		nil,
+	)
+	require.NoError(t, err)
+	bodyResponse := errorResponse{
+		Reason: "no card found",
+		Type:   "errors.errorString",
+	}
+	body, err := json.Marshal(bodyResponse)
+	require.NoError(t, err)
+	httpClient.EXPECT().Request(gomock.Any(), req).
+		Return(&httpclient.HTTPResponse{
+			Body:       body,
+			StatusCode: http.StatusNotFound,
+		}).Times(1)
+	receipt := &receipt{
+		httpClient:     httpClient,
+		serviceAddress: "localhost:1234",
+		factoryID:      factoryID,
+	}
+
+	_, err = receipt.GetReceiptInfo(ctx, index)
+	require.Error(t, err)
+	assert.ErrorContains(t, err, bodyResponse.Reason)
+
 }
