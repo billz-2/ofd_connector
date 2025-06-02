@@ -6,7 +6,7 @@ import (
 	"github.com/billz-2/ofd_connector/internal/constants"
 )
 
-func IsValidateTimeFormat(dateTime string) bool {
+func ValidateTimeFormat(dateTime string) error {
 	_, err := time.Parse(constants.TimeFormat, dateTime)
-	return err == nil
+	return err
 }

@@ -62,8 +62,11 @@ type dateTime struct {
 // OpenZreport opens a new Zreport for the fiscal drive
 // createdTime is in format "2006-01-02 15:04:05" or "now"
 func (o zReport) OpenZreport(ctx context.Context, createdTime string) error {
-	if createdTime != "now" && !validators.IsValidateTimeFormat(createdTime) {
-		return fmt.Errorf("invalid time format, can be 'now' or in format %s", constants.TimeFormat)
+	if createdTime != "now" {
+		validateErr := validators.ValidateTimeFormat(createdTime)
+		if validateErr != nil {
+			return fmt.Errorf("invalid time format, can be 'now' or in format %s, err: %w", constants.TimeFormat, validateErr)
+		}
 	}
 
 	bodyBytes, err := json.Marshal(dateTime{DateTime: createdTime})
@@ -101,8 +104,11 @@ func (o zReport) OpenZreport(ctx context.Context, createdTime string) error {
 // CloseZreport closes the Zreport for the fiscal drive
 // closedTime is in format "2006-01-02 15:04:05" or "now"
 func (o zReport) CloseZreport(ctx context.Context, closedTime string) error {
-	if closedTime != "now" && !validators.IsValidateTimeFormat(closedTime) {
-		return fmt.Errorf("invalid time format, can be 'now' or in format %s", constants.TimeFormat)
+	if closedTime != "now" {
+		validateErr := validators.ValidateTimeFormat(closedTime)
+		if validateErr != nil {
+			return fmt.Errorf("invalid time format, can be 'now' or in format %s, err: %w", constants.TimeFormat, validateErr)
+		}
 	}
 
 	bodyBytes, err := json.Marshal(dateTime{DateTime: closedTime})
