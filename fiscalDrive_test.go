@@ -13,7 +13,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestFiscalDriveListSuccess(t *testing.T) {
+func TestListFiscalDrivesSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
@@ -41,12 +41,12 @@ func TestFiscalDriveListSuccess(t *testing.T) {
 			StatusCode: 200,
 		}).Times(1)
 
-	ofd := &ofdConnector{
+	fdLister := &fiscalDriveLister{
 		httpClient:     httpClient,
 		serviceAddress: "localhost:1234",
 	}
 
-	got, err := ofd.FiscalDriveList(ctx)
+	got, err := fdLister.ListFiscalDrives(ctx)
 	require.NoError(t, err)
 	require.Len(t, got, 2)
 	assert.Equal(t, "12342131231223123123", got[0].FactoryID)
@@ -59,7 +59,7 @@ func TestFiscalDriveListSuccess(t *testing.T) {
 	assert.Equal(t, "0200", got[1].AppletVersion)
 }
 
-func TestFiscalDriveList_Fail(t *testing.T) {
+func TestListFiscalDrives_Fail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
@@ -77,12 +77,12 @@ func TestFiscalDriveList_Fail(t *testing.T) {
 			StatusCode: 400,
 		}).Times(1)
 
-	ofd := &ofdConnector{
+	fdLister := &fiscalDriveLister{
 		httpClient:     httpClient,
 		serviceAddress: "localhost:1234",
 	}
 
-	got, err := ofd.FiscalDriveList(ctx)
+	got, err := fdLister.ListFiscalDrives(ctx)
 	require.Error(t, err)
 	require.Nil(t, got)
 	assert.ErrorContains(t, err, "no card connected")

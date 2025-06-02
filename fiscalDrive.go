@@ -23,8 +23,32 @@ type errorResponse struct {
 	Type   string `json:"Type"`
 }
 
-// FiscalDriveList returns list of fiscal drive readers
-func (o *ofdConnector) FiscalDriveList(ctx context.Context) ([]FiscalDriveReaderInfo, error) {
+type FiscalDriveLister interface {
+	ListFiscalDrives(context.Context) ([]FiscalDriveReaderInfo, error)
+}
+
+// ofdConnector implements the OfdConnector interface
+type fiscalDriveLister struct {
+	serviceAddress string
+	httpClient     httpclient.HTTPClient
+}
+
+// NewFiscalDriveLister returns FiscalDriveLister that lists available fiscal drive readers in the system
+func NewFiscalDriveLister(configs OfdConnectorConfigs) (FiscalDriveLister, error) {
+	if configs.ServiceAddress == "" {
+		return nil, fmt.Errorf("invalid url address")
+	}
+
+	httpClient := httpclient.NewHTTPClient(configs.RequestTimeOutSeconds)
+
+	return &fiscalDriveLister{
+		serviceAddress: configs.ServiceAddress,
+		httpClient:     httpClient,
+	}, nil
+}
+
+// ListFiscalDrives returns list of fiscal drive readers
+func (o fiscalDriveLister) ListFiscalDrives(ctx context.Context) ([]FiscalDriveReaderInfo, error) {
 	// Implementation for /FiscalDrive/List endpoint
 	req, err := httpclient.NewHTTPRequest(
 		o.serviceAddress+"/FiscalDrive/List",

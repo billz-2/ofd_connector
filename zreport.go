@@ -17,6 +17,27 @@ type ZReportI interface {
 	ZReportInfo(ctx context.Context, index uint32) (ZReportInfo, error)
 }
 
+type zReportConfigs struct {
+	ServiceAddress string
+	FactoryID      string
+	HttpClient     httpclient.HTTPClient
+}
+
+// ofdConnector implements the OfdConnector interface
+type zReport struct {
+	serviceAddress string
+	httpClient     httpclient.HTTPClient
+	factoryID      string
+}
+
+func newZReport(configs zReportConfigs) ZReportI {
+	return &zReport{
+		serviceAddress: configs.ServiceAddress,
+		httpClient:     configs.HttpClient,
+		factoryID:      configs.FactoryID,
+	}
+}
+
 type indexInfo struct {
 	Index uint32 `json:"Index"`
 }
@@ -40,11 +61,7 @@ type dateTime struct {
 
 // OpenZreport opens a new Zreport for the fiscal drive
 // createdTime is in format "2006-01-02 15:04:05" or "now"
-func (o *ofdConnector) OpenZreport(ctx context.Context, createdTime string) error {
-	if o.factoryID == "" {
-		return fmt.Errorf("factoryID cannot be empty")
-	}
-
+func (o zReport) OpenZreport(ctx context.Context, createdTime string) error {
 	if _, err := time.Parse(constants.TimeFormat, createdTime); err != nil && createdTime != "now" {
 		return fmt.Errorf("invalid time format, can be 'now' or in format %s", constants.TimeFormat)
 	}
@@ -83,11 +100,7 @@ func (o *ofdConnector) OpenZreport(ctx context.Context, createdTime string) erro
 
 // CloseZreport closes the Zreport for the fiscal drive
 // closedTime is in format "2006-01-02 15:04:05" or "now"
-func (o *ofdConnector) CloseZreport(ctx context.Context, closedTime string) error {
-	if o.factoryID == "" {
-		return fmt.Errorf("factoryID cannot be empty")
-	}
-
+func (o zReport) CloseZreport(ctx context.Context, closedTime string) error {
 	if _, err := time.Parse(constants.TimeFormat, closedTime); err != nil && closedTime != "now" {
 		return fmt.Errorf("invalid time format, can be 'now' or in format %s", constants.TimeFormat)
 	}
@@ -126,11 +139,7 @@ func (o *ofdConnector) CloseZreport(ctx context.Context, closedTime string) erro
 
 // ZReportInfo returns the Zreport info for the fiscal drive
 // index 0-current zReport, 1-previous zReport, 2-before previous zReport, etc.
-func (o *ofdConnector) ZReportInfo(ctx context.Context, index uint32) (ZReportInfo, error) {
-	if o.factoryID == "" {
-		return ZReportInfo{}, fmt.Errorf("factoryID cannot be empty")
-	}
-
+func (o zReport) ZReportInfo(ctx context.Context, index uint32) (ZReportInfo, error) {
 	if index < 0 {
 		return ZReportInfo{}, fmt.Errorf("index cannot be negative")
 	}

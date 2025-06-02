@@ -36,13 +36,13 @@ func TestZreportOpenSuccess(t *testing.T) {
 			StatusCode: 200,
 		}).Times(1)
 
-	ofd := &ofdConnector{
+	zReport := &zReport{
 		httpClient:     httpClient,
 		serviceAddress: "localhost:1234",
 		factoryID:      factoryID,
 	}
 
-	err = ofd.OpenZreport(ctx, createdAtTime)
+	err = zReport.OpenZreport(ctx, createdAtTime)
 	require.NoError(t, err)
 }
 
@@ -52,13 +52,13 @@ func TestZreportOpenFailInvalidTime(t *testing.T) {
 	const factoryID = "12342131231223123123"
 	createdAtTime := "2025-05-31T12:04:00"
 
-	ofd := &ofdConnector{
+	zReport := &zReport{
 		httpClient:     httpClient,
 		serviceAddress: "localhost:1234",
 		factoryID:      factoryID,
 	}
 
-	err := ofd.OpenZreport(ctx, createdAtTime)
+	err := zReport.OpenZreport(ctx, createdAtTime)
 	require.Error(t, err)
 	assert.ErrorContains(t, err, "invalid time format")
 }
@@ -92,13 +92,13 @@ func TestZreportOpenFailExternal(t *testing.T) {
 			Body:       body,
 			StatusCode: 400,
 		}).Times(1)
-	ofd := &ofdConnector{
+	zReport := &zReport{
 		httpClient:     httpClient,
 		serviceAddress: "localhost:1234",
 		factoryID:      factoryID,
 	}
 
-	err = ofd.OpenZreport(ctx, createdAtTime)
+	err = zReport.OpenZreport(ctx, createdAtTime)
 	require.Error(t, err)
 	assert.ErrorContains(t, err, bodyResponse.Reason)
 
@@ -127,13 +127,13 @@ func TestZreportCloseSuccess(t *testing.T) {
 			StatusCode: 200,
 		}).Times(1)
 
-	ofd := &ofdConnector{
+	zReport := &zReport{
 		httpClient:     httpClient,
 		serviceAddress: "localhost:1234",
 		factoryID:      factoryID,
 	}
 
-	err = ofd.CloseZreport(ctx, createdAtTime)
+	err = zReport.CloseZreport(ctx, createdAtTime)
 	require.NoError(t, err)
 }
 
@@ -142,13 +142,13 @@ func TestZreportCloseFailInvalidTime(t *testing.T) {
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 	const factoryID = "12342131231223123123"
 	createdAtTime := "2025-05-31T12:04:00"
-	ofd := &ofdConnector{
+	zReport := &zReport{
 		httpClient:     httpClient,
 		serviceAddress: "localhost:1234",
 		factoryID:      factoryID,
 	}
 
-	err := ofd.CloseZreport(ctx, createdAtTime)
+	err := zReport.CloseZreport(ctx, createdAtTime)
 	require.Error(t, err)
 	assert.ErrorContains(t, err, "invalid time format")
 }
@@ -181,13 +181,13 @@ func TestZReportCloseFailExternal(t *testing.T) {
 			Body:       body,
 			StatusCode: 400,
 		}).Times(1)
-	ofd := &ofdConnector{
+	zReport := &zReport{
 		httpClient:     httpClient,
 		serviceAddress: "localhost:1234",
 		factoryID:      factoryID,
 	}
 
-	err = ofd.CloseZreport(ctx, createdAtTime)
+	err = zReport.CloseZreport(ctx, createdAtTime)
 	require.Error(t, err)
 	assert.ErrorContains(t, err, bodyResponse.Reason)
 }
@@ -241,13 +241,13 @@ func TestZReportInfoSuccess(t *testing.T) {
 			StatusCode: 200,
 		}).Times(1)
 
-	ofd := &ofdConnector{
+	zReport := &zReport{
 		httpClient:     httpClient,
 		serviceAddress: "localhost:1234",
 		factoryID:      factoryID,
 	}
 
-	info, err := ofd.ZReportInfo(ctx, 0)
+	info, err := zReport.ZReportInfo(ctx, 0)
 	require.NoError(t, err)
 	assert.Equal(t, expectedResponse.OpenTime, info.OpenTime)
 	assert.Equal(t, expectedResponse.CloseTime, info.CloseTime)
@@ -289,13 +289,13 @@ func TestZReportFailExternal(t *testing.T) {
 			Body:       body,
 			StatusCode: 400,
 		}).Times(1)
-	ofd := &ofdConnector{
+	zReport := &zReport{
 		httpClient:     httpClient,
 		serviceAddress: "localhost:1234",
 		factoryID:      factoryID,
 	}
 
-	_, err = ofd.ZReportInfo(ctx, 0)
+	_, err = zReport.ZReportInfo(ctx, 0)
 	require.Error(t, err)
 	assert.ErrorContains(t, err, bodyResponse.Reason)
 }
