@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/billz-2/ofd_connector/internal/constants"
 	"github.com/billz-2/ofd_connector/internal/httpclient"
+	"github.com/billz-2/ofd_connector/internal/validators"
 )
 
 type ZReportI interface {
@@ -62,7 +62,7 @@ type dateTime struct {
 // OpenZreport opens a new Zreport for the fiscal drive
 // createdTime is in format "2006-01-02 15:04:05" or "now"
 func (o zReport) OpenZreport(ctx context.Context, createdTime string) error {
-	if _, err := time.Parse(constants.TimeFormat, createdTime); err != nil && createdTime != "now" {
+	if createdTime != "now" && !validators.IsValidateTimeFormat(createdTime) {
 		return fmt.Errorf("invalid time format, can be 'now' or in format %s", constants.TimeFormat)
 	}
 
@@ -101,7 +101,7 @@ func (o zReport) OpenZreport(ctx context.Context, createdTime string) error {
 // CloseZreport closes the Zreport for the fiscal drive
 // closedTime is in format "2006-01-02 15:04:05" or "now"
 func (o zReport) CloseZreport(ctx context.Context, closedTime string) error {
-	if _, err := time.Parse(constants.TimeFormat, closedTime); err != nil && closedTime != "now" {
+	if closedTime != "now" && !validators.IsValidateTimeFormat(closedTime) {
 		return fmt.Errorf("invalid time format, can be 'now' or in format %s", constants.TimeFormat)
 	}
 
