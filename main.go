@@ -12,10 +12,7 @@ type OfdConnector interface {
 	FiscalDriveList(context.Context) ([]FiscalDriveReaderInfo, error)
 	SetFactoryID(factoryID string)
 
-	OpenZreport(ctx context.Context, createdTime string) error
-	CloseZreport(ctx context.Context, closedTime string) error
-	ZReportInfo(ctx context.Context, index uint32) (ZReportInfo, error)
-	// Add methods as needed
+	ZReportI
 }
 
 type OfdConnectorConfigs struct {

@@ -11,6 +11,12 @@ import (
 	"github.com/billz-2/ofd_connector/internal/httpclient"
 )
 
+type ZReportI interface {
+	OpenZreport(ctx context.Context, createdTime string) error
+	CloseZreport(ctx context.Context, closedTime string) error
+	ZReportInfo(ctx context.Context, index uint32) (ZReportInfo, error)
+}
+
 type indexInfo struct {
 	Index uint32 `json:"Index"`
 }
