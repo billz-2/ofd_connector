@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/billz-2/ofd_connector/internal/constants"
-	"github.com/billz-2/ofd_connector/internal/httpclient"
+	"github.com/billz-2/ofd_connector/internal/gateway"
 )
 
 type ReceiptI interface {
@@ -18,23 +18,17 @@ type ReceiptI interface {
 }
 
 type receiptConfigs struct {
-	ServiceAddress string
-	FactoryID      string
-	HttpClient     httpclient.HTTPClient
+	Gateway gateway.GatewayI
 }
 
 // ofdConnector implements the OfdConnector interface
 type receipt struct {
-	serviceAddress string
-	httpClient     httpclient.HTTPClient
-	factoryID      string
+	gateway gateway.GatewayI
 }
 
 func newReceipt(configs receiptConfigs) ReceiptI {
 	return &receipt{
-		serviceAddress: configs.ServiceAddress,
-		httpClient:     configs.HttpClient,
-		factoryID:      configs.FactoryID,
+		gateway: configs.Gateway,
 	}
 }
 
@@ -138,8 +132,9 @@ func (r *receipt) GetTXID(ctx context.Context, params SaleParams) (int64, error)
 		return 0, fmt.Errorf("error marshalling body: %s", err.Error())
 	}
 
-	endpoint := fmt.Sprintf("%s/FiscalDrive/Receipt/GetTXID/%s", r.serviceAddress, r.factoryID)
-	req, err := httpclient.NewHTTPRequest(
+	endpoint := fmt.Sprintf("/FiscalDrive/Receipt/GetTXID/%s", factoryID)
+	resp, err := r.gateway.HTTPRequest(
+		ctx,
 		endpoint,
 		http.MethodPost,
 		constants.ContentTypeJSON,
@@ -150,7 +145,6 @@ func (r *receipt) GetTXID(ctx context.Context, params SaleParams) (int64, error)
 		return 0, fmt.Errorf("error creating request: %s", err.Error())
 	}
 
-	resp := r.httpClient.Request(ctx, req)
 	if resp.StatusCode != http.StatusOK {
 		errorResp := errorResponse{}
 		if err = json.Unmarshal(resp.Body, &errorResp); err != nil {
@@ -180,8 +174,9 @@ func (r *receipt) RegisterTXID(ctx context.Context, txID int64) (ReceiptInfo, er
 		return ReceiptInfo{}, fmt.Errorf("error marshalling request body: %s", err.Error())
 	}
 	endpoint := fmt.Sprintf(
-		"%s/FiscalDrive/Receipt/RegisterTXID/%s", r.serviceAddress, r.factoryID)
-	req, err := httpclient.NewHTTPRequest(
+		"/FiscalDrive/Receipt/RegisterTXID/%s", factoryID)
+	resp, err := r.gateway.HTTPRequest(
+		ctx,
 		endpoint,
 		http.MethodPost,
 		constants.ContentTypeUrlEncoded,
@@ -192,7 +187,6 @@ func (r *receipt) RegisterTXID(ctx context.Context, txID int64) (ReceiptInfo, er
 		return ReceiptInfo{}, fmt.Errorf("error creating request: %s", err.Error())
 	}
 
-	resp := r.httpClient.Request(ctx, req)
 	if resp.StatusCode != http.StatusOK {
 		errorResp := errorResponse{}
 		if err = json.Unmarshal(resp.Body, &errorResp); err != nil {
@@ -218,8 +212,9 @@ func (r *receipt) GetReceiptInfo(ctx context.Context, index uint32) (ReceiptFull
 	if err != nil {
 		return ReceiptFullInfo{}, fmt.Errorf("error marshalling body: %s", err.Error())
 	}
-	endpoint := fmt.Sprintf("%s/FiscalDrive/Receipt/Info/%s", r.serviceAddress, r.factoryID)
-	req, err := httpclient.NewHTTPRequest(
+	endpoint := fmt.Sprintf("/FiscalDrive/Receipt/Info/%s", factoryID)
+	resp, err := r.gateway.HTTPRequest(
+		ctx,
 		endpoint,
 		http.MethodPost,
 		constants.ContentTypeUrlEncoded,
@@ -230,7 +225,6 @@ func (r *receipt) GetReceiptInfo(ctx context.Context, index uint32) (ReceiptFull
 		return ReceiptFullInfo{}, fmt.Errorf("error creating request: %s", err.Error())
 	}
 
-	resp := r.httpClient.Request(ctx, req)
 	if resp.StatusCode != http.StatusOK {
 		errorResp := errorResponse{}
 		if err := json.Unmarshal(resp.Body, &errorResp); err != nil {
@@ -260,9 +254,9 @@ func (r *receipt) GetDatabaseFilesCount(ctx context.Context, status uint16) (map
 	if err != nil {
 		return nil, fmt.Errorf("error marshalling body: %s", err.Error())
 	}
-	endpoint := fmt.Sprintf("%s/FiscalDrive/Receipt/Database/Files/Count", r.serviceAddress)
-	req, err := httpclient.NewHTTPRequest(
-		endpoint,
+	resp, err := r.gateway.HTTPRequest(
+		ctx,
+		"/FiscalDrive/Receipt/Database/Files/Count",
 		http.MethodPost,
 		constants.ContentTypeUrlEncoded,
 		bodyBytes,
@@ -272,7 +266,6 @@ func (r *receipt) GetDatabaseFilesCount(ctx context.Context, status uint16) (map
 		return nil, fmt.Errorf("error creating request: %s", err.Error())
 	}
 
-	resp := r.httpClient.Request(ctx, req)
 	if resp.StatusCode != http.StatusOK {
 		errorResp := errorResponse{}
 		if err := json.Unmarshal(resp.Body, &errorResp); err != nil {

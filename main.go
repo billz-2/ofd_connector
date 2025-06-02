@@ -3,6 +3,7 @@ package ofdconnector
 import (
 	"fmt"
 
+	"github.com/billz-2/ofd_connector/internal/gateway"
 	"github.com/billz-2/ofd_connector/internal/httpclient"
 )
 
@@ -18,13 +19,12 @@ type OfdConnectorConfigs struct {
 	FactoryID             string
 }
 
+var factoryID string
+
 // ofdConnector implements the OfdConnector interface
 type ofdConnector struct {
-	serviceAddress string
-	httpClient     httpclient.HTTPClient
-	factoryID      string
-	zReport        ZReportI
-	receipt        ReceiptI
+	zReport ZReportI
+	receipt ReceiptI
 }
 
 // New creates a new instance of OfdConnector
@@ -36,25 +36,24 @@ func New(configs OfdConnectorConfigs) (OfdConnector, error) {
 		return nil, fmt.Errorf("invalid FactoryID")
 	}
 
+	// set as global variable, to use accross all methods
+	factoryID = configs.FactoryID
+
 	httpClient := httpclient.NewHTTPClient(configs.RequestTimeOutSeconds)
-	zReport := newZReport(zReportConfigs{
+	gateway := gateway.New(gateway.Configs{
 		ServiceAddress: configs.ServiceAddress,
-		FactoryID:      configs.FactoryID,
 		HttpClient:     httpClient,
 	})
-
+	zReport := newZReport(zReportConfigs{
+		gateway: gateway,
+	})
 	receipt := newReceipt(receiptConfigs{
-		ServiceAddress: configs.ServiceAddress,
-		FactoryID:      configs.FactoryID,
-		HttpClient:     httpClient,
+		Gateway: gateway,
 	})
 
 	return &ofdConnector{
-		serviceAddress: configs.ServiceAddress,
-		httpClient:     httpClient,
-		zReport:        zReport,
-		receipt:        receipt,
-		factoryID:      configs.FactoryID,
+		zReport: zReport,
+		receipt: receipt,
 	}, nil
 }
 

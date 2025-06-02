@@ -39,7 +39,9 @@ func NewFiscalDriveLister(configs OfdConnectorConfigs) (FiscalDriveLister, error
 		return nil, fmt.Errorf("invalid url address")
 	}
 
-	httpClient := httpclient.NewHTTPClient(configs.RequestTimeOutSeconds)
+	httpClient := httpclient.NewHTTPClient(
+		configs.RequestTimeOutSeconds,
+	)
 
 	return &fiscalDriveLister{
 		serviceAddress: configs.ServiceAddress,

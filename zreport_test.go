@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/billz-2/ofd_connector/internal/constants"
+	"github.com/billz-2/ofd_connector/internal/gateway"
 	"github.com/billz-2/ofd_connector/internal/httpclient"
 	mock_httpclient "github.com/billz-2/ofd_connector/internal/httpclient/mock"
 	"github.com/stretchr/testify/assert"
@@ -17,7 +18,7 @@ func TestZreportOpenSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
-	const factoryID = "12342131231223123123"
+	factoryID = "12342131231223123123"
 	createdAtTime := "2025-05-31 12:04:00"
 	reqBody, err := json.Marshal(dateTime{DateTime: createdAtTime})
 	require.NoError(t, err)
@@ -36,10 +37,12 @@ func TestZreportOpenSuccess(t *testing.T) {
 			StatusCode: 200,
 		}).Times(1)
 
+	gateway := gateway.New(gateway.Configs{
+		ServiceAddress: "localhost:1234",
+		HttpClient:     httpClient,
+	})
 	zReport := &zReport{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 
 	err = zReport.OpenZreport(ctx, createdAtTime)
@@ -49,13 +52,15 @@ func TestZreportOpenSuccess(t *testing.T) {
 func TestZreportOpenFailInvalidTime(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	const factoryID = "12342131231223123123"
+	factoryID = "12342131231223123123"
 	createdAtTime := "2025-05-31T12:04:00"
 
+	gateway := gateway.New(gateway.Configs{
+		ServiceAddress: "localhost:1234",
+		HttpClient:     httpClient,
+	})
 	zReport := &zReport{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 
 	err := zReport.OpenZreport(ctx, createdAtTime)
@@ -92,10 +97,12 @@ func TestZreportOpenFailExternal(t *testing.T) {
 			Body:       body,
 			StatusCode: 400,
 		}).Times(1)
+	gateway := gateway.New(gateway.Configs{
+		ServiceAddress: "localhost:1234",
+		HttpClient:     httpClient,
+	})
 	zReport := &zReport{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 
 	err = zReport.OpenZreport(ctx, createdAtTime)
@@ -108,7 +115,7 @@ func TestZreportCloseSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
-	const factoryID = "12342131231223123123"
+	factoryID = "12342131231223123123"
 	createdAtTime := "2025-05-31 12:04:00"
 	reqBody, err := json.Marshal(dateTime{DateTime: createdAtTime})
 	require.NoError(t, err)
@@ -127,10 +134,12 @@ func TestZreportCloseSuccess(t *testing.T) {
 			StatusCode: 200,
 		}).Times(1)
 
+	gateway := gateway.New(gateway.Configs{
+		ServiceAddress: "localhost:1234",
+		HttpClient:     httpClient,
+	})
 	zReport := &zReport{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 
 	err = zReport.CloseZreport(ctx, createdAtTime)
@@ -140,12 +149,14 @@ func TestZreportCloseSuccess(t *testing.T) {
 func TestZreportCloseFailInvalidTime(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	const factoryID = "12342131231223123123"
+	factoryID = "12342131231223123123"
 	createdAtTime := "2025-05-31T12:04:00"
+	gateway := gateway.New(gateway.Configs{
+		ServiceAddress: "localhost:1234",
+		HttpClient:     httpClient,
+	})
 	zReport := &zReport{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 
 	err := zReport.CloseZreport(ctx, createdAtTime)
@@ -156,7 +167,7 @@ func TestZreportCloseFailInvalidTime(t *testing.T) {
 func TestZReportCloseFailExternal(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	const factoryID = "12342131231223123123"
+	factoryID = "12342131231223123123"
 	createdAtTime := "2025-05-31 12:04:00"
 	reqBody, err := json.Marshal(dateTime{DateTime: createdAtTime})
 	require.NoError(t, err)
@@ -181,10 +192,12 @@ func TestZReportCloseFailExternal(t *testing.T) {
 			Body:       body,
 			StatusCode: 400,
 		}).Times(1)
+	gateway := gateway.New(gateway.Configs{
+		ServiceAddress: "localhost:1234",
+		HttpClient:     httpClient,
+	})
 	zReport := &zReport{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 
 	err = zReport.CloseZreport(ctx, createdAtTime)
@@ -196,7 +209,7 @@ func TestZReportInfoSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
-	const factoryID = "12342131231223123123"
+	factoryID = "12342131231223123123"
 
 	indexData := indexInfo{Index: 0}
 	indexBody, err := json.Marshal(indexData)
@@ -241,10 +254,12 @@ func TestZReportInfoSuccess(t *testing.T) {
 			StatusCode: 200,
 		}).Times(1)
 
+	gateway := gateway.New(gateway.Configs{
+		ServiceAddress: "localhost:1234",
+		HttpClient:     httpClient,
+	})
 	zReport := &zReport{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 
 	info, err := zReport.GetZReportInfo(ctx, 0)
@@ -265,7 +280,7 @@ func TestZReportInfoSuccess(t *testing.T) {
 func TestZReportFailExternal(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	const factoryID = "12342131231223123123"
+	factoryID = "12342131231223123123"
 	indexData := indexInfo{Index: 0}
 	indexBody, err := json.Marshal(indexData)
 	require.NoError(t, err)
@@ -289,10 +304,12 @@ func TestZReportFailExternal(t *testing.T) {
 			Body:       body,
 			StatusCode: 400,
 		}).Times(1)
+	gateway := gateway.New(gateway.Configs{
+		ServiceAddress: "localhost:1234",
+		HttpClient:     httpClient,
+	})
 	zReport := &zReport{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 
 	_, err = zReport.GetZReportInfo(ctx, 0)

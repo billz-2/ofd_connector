@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/billz-2/ofd_connector/internal/constants"
+	"github.com/billz-2/ofd_connector/internal/gateway"
 	"github.com/billz-2/ofd_connector/internal/httpclient"
 	mock_httpclient "github.com/billz-2/ofd_connector/internal/httpclient/mock"
 	"github.com/stretchr/testify/assert"
@@ -16,9 +17,9 @@ import (
 func TestGetTXIDSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+	factoryID = "12342131231223123123"
 	const (
-		factoryID = "12342131231223123123"
-		txIDRes   = int64(2)
+		txIDRes = int64(2)
 	)
 	saleParams := SaleParams{
 		ExtraInfo: ExtraInfo{
@@ -87,10 +88,12 @@ func TestGetTXIDSuccess(t *testing.T) {
 			Body:       body,
 			StatusCode: http.StatusOK,
 		}).Times(1)
+	gateway := gateway.New(gateway.Configs{
+		HttpClient:     httpClient,
+		ServiceAddress: "localhost:1234",
+	})
 	receipt := &receipt{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 
 	gotTxID, err := receipt.GetTXID(ctx, saleParams)
@@ -101,9 +104,8 @@ func TestGetTXIDSuccess(t *testing.T) {
 func TestGetTXIDFail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	const (
-		factoryID = "12342131231223123123"
-	)
+	factoryID = "12342131231223123123"
+
 	saleParams := SaleParams{}
 	saleInfoBody, err := json.Marshal(saleParams)
 	require.NoError(t, err)
@@ -128,10 +130,12 @@ func TestGetTXIDFail(t *testing.T) {
 			Body:       body,
 			StatusCode: http.StatusNotFound,
 		}).Times(1)
+	gateway := gateway.New(gateway.Configs{
+		HttpClient:     httpClient,
+		ServiceAddress: "localhost:1234",
+	})
 	receipt := &receipt{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 
 	_, err = receipt.GetTXID(ctx, saleParams)
@@ -142,9 +146,9 @@ func TestGetTXIDFail(t *testing.T) {
 func TestRegisterTXIDSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+	factoryID = "12342131231223123123"
 	const (
-		factoryID = "12342131231223123123"
-		txID      = int64(2)
+		txID = int64(2)
 	)
 	txIDRes := ReceiptInfo{
 		DateTime:   "2023-01-01 00:00:00",
@@ -171,10 +175,12 @@ func TestRegisterTXIDSuccess(t *testing.T) {
 			Body:       body,
 			StatusCode: http.StatusOK,
 		}).Times(1)
+	gateway := gateway.New(gateway.Configs{
+		HttpClient:     httpClient,
+		ServiceAddress: "localhost:1234",
+	})
 	receipt := &receipt{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 
 	receiptInfo, err := receipt.RegisterTXID(ctx, txID)
@@ -190,9 +196,9 @@ func TestRegisterTXIDSuccess(t *testing.T) {
 func TestRegisterTXIDFail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+	factoryID = "12342131231223123123"
 	const (
-		factoryID = "12342131231223123123"
-		txID      = int64(2)
+		txID = int64(2)
 	)
 	regTxIDReq := RegisterTXIDReq{TXID: txID}
 	regTxIDReqBody, err := json.Marshal(regTxIDReq)
@@ -217,10 +223,12 @@ func TestRegisterTXIDFail(t *testing.T) {
 			StatusCode: http.StatusNotFound,
 		}).Times(1)
 
+	gateway := gateway.New(gateway.Configs{
+		HttpClient:     httpClient,
+		ServiceAddress: "localhost:1234",
+	})
 	receipt := &receipt{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 	_, err = receipt.RegisterTXID(ctx, txID)
 	require.Error(t, err)
@@ -230,9 +238,9 @@ func TestRegisterTXIDFail(t *testing.T) {
 func TestGetReceiptInfo(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+	factoryID = "12342131231223123123"
 	const (
-		factoryID = "12342131231223123123"
-		index     = uint32(0)
+		index = uint32(0)
 	)
 	receiptInfoRes := ReceiptFullInfo{
 		Time:          "2023-01-01 00:00:00",
@@ -268,10 +276,12 @@ func TestGetReceiptInfo(t *testing.T) {
 			StatusCode: http.StatusOK,
 		}).Times(1)
 
+	gateway := gateway.New(gateway.Configs{
+		HttpClient:     httpClient,
+		ServiceAddress: "localhost:1234",
+	})
 	receipt := &receipt{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 
 	receiptInfo, err := receipt.GetReceiptInfo(ctx, index)
@@ -292,9 +302,9 @@ func TestGetReceiptInfo(t *testing.T) {
 func TestGetReceiptInfoFail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+	factoryID = "12342131231223123123"
 	const (
-		factoryID = "12342131231223123123"
-		index     = uint32(0)
+		index = uint32(0)
 	)
 	indexData := indexInfo{Index: index}
 	indexBody, err := json.Marshal(indexData)
@@ -318,10 +328,12 @@ func TestGetReceiptInfoFail(t *testing.T) {
 			Body:       body,
 			StatusCode: http.StatusNotFound,
 		}).Times(1)
+	gateway := gateway.New(gateway.Configs{
+		HttpClient:     httpClient,
+		ServiceAddress: "localhost:1234",
+	})
 	receipt := &receipt{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 
 	_, err = receipt.GetReceiptInfo(ctx, index)
@@ -333,9 +345,7 @@ func TestGetReceiptInfoFail(t *testing.T) {
 func TestGetDatabaseFilesCountSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	const (
-		factoryID = "12342131231223123123"
-	)
+	factoryID = "12342131231223123123"
 
 	databaseFilesCount := map[string]int64{factoryID: 12}
 
@@ -357,10 +367,12 @@ func TestGetDatabaseFilesCountSuccess(t *testing.T) {
 			Body:       body,
 			StatusCode: http.StatusOK,
 		}).Times(1)
+	gateway := gateway.New(gateway.Configs{
+		HttpClient:     httpClient,
+		ServiceAddress: "localhost:1234",
+	})
 	receipt := &receipt{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 	countRes, err := receipt.GetDatabaseFilesCount(ctx, statusFilter.Status)
 	require.NoError(t, err)
@@ -371,9 +383,8 @@ func TestGetDatabaseFilesCountSuccess(t *testing.T) {
 func TestGetDatabaseFilesCountFail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	const (
-		factoryID = "12342131231223123123"
-	)
+	factoryID = "12342131231223123123"
+
 	statusFilter := statusData{Status: 0}
 	statusBody, err := json.Marshal(statusFilter)
 	require.NoError(t, err)
@@ -396,10 +407,12 @@ func TestGetDatabaseFilesCountFail(t *testing.T) {
 			Body:       body,
 			StatusCode: http.StatusNotFound,
 		}).Times(1)
+	gateway := gateway.New(gateway.Configs{
+		HttpClient:     httpClient,
+		ServiceAddress: "localhost:1234",
+	})
 	receipt := &receipt{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
-		factoryID:      factoryID,
+		gateway: gateway,
 	}
 	_, err = receipt.GetDatabaseFilesCount(ctx, statusFilter.Status)
 	require.Error(t, err)

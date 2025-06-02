@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/billz-2/ofd_connector/internal/constants"
-	"github.com/billz-2/ofd_connector/internal/httpclient"
+	"github.com/billz-2/ofd_connector/internal/gateway"
 	"github.com/billz-2/ofd_connector/internal/validators"
 )
 
@@ -18,23 +18,17 @@ type ZReportI interface {
 }
 
 type zReportConfigs struct {
-	ServiceAddress string
-	FactoryID      string
-	HttpClient     httpclient.HTTPClient
+	gateway gateway.GatewayI
 }
 
 // ofdConnector implements the OfdConnector interface
 type zReport struct {
-	serviceAddress string
-	httpClient     httpclient.HTTPClient
-	factoryID      string
+	gateway gateway.GatewayI
 }
 
 func newZReport(configs zReportConfigs) ZReportI {
 	return &zReport{
-		serviceAddress: configs.ServiceAddress,
-		httpClient:     configs.HttpClient,
-		factoryID:      configs.FactoryID,
+		gateway: configs.gateway,
 	}
 }
 
@@ -74,8 +68,9 @@ func (o zReport) OpenZreport(ctx context.Context, createdTime string) error {
 		return fmt.Errorf("error marshalling body: %s", err.Error())
 	}
 
-	endpoint := fmt.Sprintf("%s/FiscalDrive/ZReport/Open/%s", o.serviceAddress, o.factoryID)
-	req, err := httpclient.NewHTTPRequest(
+	endpoint := fmt.Sprintf("/FiscalDrive/ZReport/Open/%s", factoryID)
+	resp, err := o.gateway.HTTPRequest(
+		ctx,
 		endpoint,
 		http.MethodPost,
 		constants.ContentTypeUrlEncoded,
@@ -86,7 +81,6 @@ func (o zReport) OpenZreport(ctx context.Context, createdTime string) error {
 		return fmt.Errorf("error creating request: %s", err.Error())
 	}
 
-	resp := o.httpClient.Request(ctx, req)
 	if resp.StatusCode != http.StatusOK {
 		errorResp := errorResponse{}
 		if err := json.Unmarshal(resp.Body, &errorResp); err != nil {
@@ -116,8 +110,9 @@ func (o zReport) CloseZreport(ctx context.Context, closedTime string) error {
 		return fmt.Errorf("error marshalling body: %s", err.Error())
 	}
 
-	endpoint := fmt.Sprintf("%s/FiscalDrive/ZReport/Close/%s", o.serviceAddress, o.factoryID)
-	req, err := httpclient.NewHTTPRequest(
+	endpoint := fmt.Sprintf("/FiscalDrive/ZReport/Close/%s", factoryID)
+	resp, err := o.gateway.HTTPRequest(
+		ctx,
 		endpoint,
 		http.MethodPost,
 		constants.ContentTypeUrlEncoded,
@@ -128,7 +123,6 @@ func (o zReport) CloseZreport(ctx context.Context, closedTime string) error {
 		return fmt.Errorf("error creating request: %s", err.Error())
 	}
 
-	resp := o.httpClient.Request(ctx, req)
 	if resp.StatusCode != http.StatusOK {
 		errorResp := errorResponse{}
 		if err := json.Unmarshal(resp.Body, &errorResp); err != nil {
@@ -151,8 +145,9 @@ func (o zReport) GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo,
 		return ZReportInfo{}, fmt.Errorf("error marshalling body: %s", err.Error())
 	}
 
-	endpoint := fmt.Sprintf("%s/FiscalDrive/ZReport/Info/%s", o.serviceAddress, o.factoryID)
-	req, err := httpclient.NewHTTPRequest(
+	endpoint := fmt.Sprintf("/FiscalDrive/ZReport/Info/%s", factoryID)
+	resp, err := o.gateway.HTTPRequest(
+		ctx,
 		endpoint,
 		http.MethodGet,
 		constants.ContentTypeUrlEncoded,
@@ -163,7 +158,6 @@ func (o zReport) GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo,
 		return ZReportInfo{}, fmt.Errorf("error creating request: %s", err.Error())
 	}
 
-	resp := o.httpClient.Request(ctx, req)
 	if resp.StatusCode != http.StatusOK {
 		errorResp := errorResponse{}
 		if err := json.Unmarshal(resp.Body, &errorResp); err != nil {
