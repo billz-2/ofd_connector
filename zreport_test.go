@@ -247,7 +247,7 @@ func TestZReportInfoSuccess(t *testing.T) {
 		factoryID:      factoryID,
 	}
 
-	info, err := zReport.ZReportInfo(ctx, 0)
+	info, err := zReport.GetZReportInfo(ctx, 0)
 	require.NoError(t, err)
 	assert.Equal(t, expectedResponse.OpenTime, info.OpenTime)
 	assert.Equal(t, expectedResponse.CloseTime, info.CloseTime)
@@ -295,7 +295,7 @@ func TestZReportFailExternal(t *testing.T) {
 		factoryID:      factoryID,
 	}
 
-	_, err = zReport.ZReportInfo(ctx, 0)
+	_, err = zReport.GetZReportInfo(ctx, 0)
 	require.Error(t, err)
 	assert.ErrorContains(t, err, bodyResponse.Reason)
 }

@@ -14,7 +14,7 @@ import (
 type ZReportI interface {
 	OpenZreport(ctx context.Context, createdTime string) error
 	CloseZreport(ctx context.Context, closedTime string) error
-	ZReportInfo(ctx context.Context, index uint32) (ZReportInfo, error)
+	GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo, error)
 }
 
 type zReportConfigs struct {
@@ -137,9 +137,9 @@ func (o zReport) CloseZreport(ctx context.Context, closedTime string) error {
 	return nil
 }
 
-// ZReportInfo returns the Zreport info for the fiscal drive
+// GetZReportInfo returns the Zreport info for the fiscal drive
 // index 0-current zReport, 1-previous zReport, 2-before previous zReport, etc.
-func (o zReport) ZReportInfo(ctx context.Context, index uint32) (ZReportInfo, error) {
+func (o zReport) GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo, error) {
 	if index < 0 {
 		return ZReportInfo{}, fmt.Errorf("index cannot be negative")
 	}
