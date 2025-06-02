@@ -140,10 +140,6 @@ func (o zReport) CloseZreport(ctx context.Context, closedTime string) error {
 // GetZReportInfo returns the Zreport info for the fiscal drive
 // index 0-current zReport, 1-previous zReport, 2-before previous zReport, etc.
 func (o zReport) GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo, error) {
-	if index < 0 {
-		return ZReportInfo{}, fmt.Errorf("index cannot be negative")
-	}
-
 	bodyBytes, err := json.Marshal(indexInfo{Index: index})
 	if err != nil {
 		return ZReportInfo{}, fmt.Errorf("error marshalling body: %s", err.Error())
