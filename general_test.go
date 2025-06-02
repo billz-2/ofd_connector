@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/billz-2/ofd_connector/pkg/httpclient"
-	mock_httpclient "github.com/billz-2/ofd_connector/pkg/httpclient/mock"
+	"github.com/billz-2/ofd_connector/internal/constants"
+	"github.com/billz-2/ofd_connector/internal/httpclient"
+	mock_httpclient "github.com/billz-2/ofd_connector/internal/httpclient/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/test-go/testify/require"
 	"go.uber.org/mock/gomock"
@@ -16,7 +17,7 @@ func TestFiscalDriveListSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
-	req, err := httpclient.NewHTTPRequest("localhost:1234/FiscalDrive/List", http.MethodPost, ContentTypeJSON, nil, nil)
+	req, err := httpclient.NewHTTPRequest("localhost:1234/FiscalDrive/List", http.MethodPost, constants.ContentTypeJSON, nil, nil)
 	require.NoError(t, err)
 
 	body, err := json.Marshal([]FiscalDriveReaderInfo{
@@ -62,7 +63,7 @@ func TestFiscalDriveList_Fail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
-	req, err := httpclient.NewHTTPRequest("localhost:1234/FiscalDrive/List", http.MethodPost, ContentTypeJSON, nil, nil)
+	req, err := httpclient.NewHTTPRequest("localhost:1234/FiscalDrive/List", http.MethodPost, constants.ContentTypeJSON, nil, nil)
 	require.NoError(t, err)
 
 	body, err := json.Marshal(errorResponse{

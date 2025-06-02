@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/billz-2/ofd_connector/pkg/httpclient"
+	"github.com/billz-2/ofd_connector/internal/httpclient"
 )
 
 // OfdConnector interface defines the contract for OFD service operations

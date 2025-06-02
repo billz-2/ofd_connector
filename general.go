@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/billz-2/ofd_connector/pkg/httpclient"
+	"github.com/billz-2/ofd_connector/internal/constants"
+	"github.com/billz-2/ofd_connector/internal/httpclient"
 )
 
 type FiscalDriveReaderInfo struct {
@@ -28,7 +29,7 @@ func (o *ofdConnector) FiscalDriveList(ctx context.Context) ([]FiscalDriveReader
 	req, err := httpclient.NewHTTPRequest(
 		o.serviceAddress+"/FiscalDrive/List",
 		http.MethodPost,
-		ContentTypeJSON,
+		constants.ContentTypeJSON,
 		nil,
 		nil,
 	)

@@ -7,7 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/billz-2/ofd_connector/pkg/httpclient"
+	"github.com/billz-2/ofd_connector/internal/constants"
+	"github.com/billz-2/ofd_connector/internal/httpclient"
 )
 
 type indexInfo struct {
@@ -38,8 +39,8 @@ func (o *ofdConnector) OpenZreport(ctx context.Context, createdTime string) erro
 		return fmt.Errorf("factoryID cannot be empty")
 	}
 
-	if _, err := time.Parse(TimeFormat, createdTime); err != nil && createdTime != "now" {
-		return fmt.Errorf("invalid time format, can be 'now' or in format %s", TimeFormat)
+	if _, err := time.Parse(constants.TimeFormat, createdTime); err != nil && createdTime != "now" {
+		return fmt.Errorf("invalid time format, can be 'now' or in format %s", constants.TimeFormat)
 	}
 
 	bodyBytes, err := json.Marshal(dateTime{DateTime: createdTime})
@@ -51,7 +52,7 @@ func (o *ofdConnector) OpenZreport(ctx context.Context, createdTime string) erro
 	req, err := httpclient.NewHTTPRequest(
 		endpoint,
 		http.MethodPost,
-		ContentTypeUrlEncoded,
+		constants.ContentTypeUrlEncoded,
 		bodyBytes,
 		nil,
 	)
@@ -81,8 +82,8 @@ func (o *ofdConnector) CloseZreport(ctx context.Context, closedTime string) erro
 		return fmt.Errorf("factoryID cannot be empty")
 	}
 
-	if _, err := time.Parse(TimeFormat, closedTime); err != nil && closedTime != "now" {
-		return fmt.Errorf("invalid time format, can be 'now' or in format %s", TimeFormat)
+	if _, err := time.Parse(constants.TimeFormat, closedTime); err != nil && closedTime != "now" {
+		return fmt.Errorf("invalid time format, can be 'now' or in format %s", constants.TimeFormat)
 	}
 
 	bodyBytes, err := json.Marshal(dateTime{DateTime: closedTime})
@@ -94,7 +95,7 @@ func (o *ofdConnector) CloseZreport(ctx context.Context, closedTime string) erro
 	req, err := httpclient.NewHTTPRequest(
 		endpoint,
 		http.MethodPost,
-		ContentTypeUrlEncoded,
+		constants.ContentTypeUrlEncoded,
 		bodyBytes,
 		nil,
 	)
@@ -137,7 +138,7 @@ func (o *ofdConnector) ZReportInfo(ctx context.Context, index uint32) (ZReportIn
 	req, err := httpclient.NewHTTPRequest(
 		endpoint,
 		http.MethodGet,
-		ContentTypeUrlEncoded,
+		constants.ContentTypeUrlEncoded,
 		bodyBytes,
 		nil,
 	)

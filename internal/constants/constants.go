@@ -1,4 +1,4 @@
-package ofdconnector
+package constants
 
 const (
 	ContentTypeJSON       = "application/json"

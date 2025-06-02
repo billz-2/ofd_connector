@@ -8,7 +8,7 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/billz-2/ofd_connector/pkg/httpclient"
+	"github.com/billz-2/ofd_connector/internal/httpclient"
 )
 
 var (

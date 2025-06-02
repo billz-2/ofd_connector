@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/billz-2/ofd_connector/pkg/httpclient"
-	mock_httpclient "github.com/billz-2/ofd_connector/pkg/httpclient/mock"
+	"github.com/billz-2/ofd_connector/internal/constants"
+	"github.com/billz-2/ofd_connector/internal/httpclient"
+	mock_httpclient "github.com/billz-2/ofd_connector/internal/httpclient/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/test-go/testify/require"
 	"go.uber.org/mock/gomock"
@@ -23,7 +24,7 @@ func TestZreportOpenSuccess(t *testing.T) {
 	req, err := httpclient.NewHTTPRequest(
 		"localhost:1234/FiscalDrive/ZReport/Open/"+factoryID,
 		http.MethodPost,
-		ContentTypeUrlEncoded,
+		constants.ContentTypeUrlEncoded,
 		reqBody,
 		nil,
 	)
@@ -72,7 +73,7 @@ func TestZreportOpenFailExternal(t *testing.T) {
 	req, err := httpclient.NewHTTPRequest(
 		"localhost:1234/FiscalDrive/ZReport/Open/"+factoryID,
 		http.MethodPost,
-		ContentTypeUrlEncoded,
+		constants.ContentTypeUrlEncoded,
 		reqBody,
 		nil,
 	)
@@ -114,7 +115,7 @@ func TestZreportCloseSuccess(t *testing.T) {
 	req, err := httpclient.NewHTTPRequest(
 		"localhost:1234/FiscalDrive/ZReport/Close/"+factoryID,
 		http.MethodPost,
-		ContentTypeUrlEncoded,
+		constants.ContentTypeUrlEncoded,
 		reqBody,
 		nil,
 	)
@@ -162,7 +163,7 @@ func TestZReportCloseFailExternal(t *testing.T) {
 	req, err := httpclient.NewHTTPRequest(
 		"localhost:1234/FiscalDrive/ZReport/Close/"+factoryID,
 		http.MethodPost,
-		ContentTypeUrlEncoded,
+		constants.ContentTypeUrlEncoded,
 		reqBody,
 		nil,
 	)
@@ -203,7 +204,7 @@ func TestZReportInfoSuccess(t *testing.T) {
 	req, err := httpclient.NewHTTPRequest(
 		"localhost:1234/FiscalDrive/ZReport/Info/"+factoryID,
 		http.MethodGet,
-		ContentTypeUrlEncoded,
+		constants.ContentTypeUrlEncoded,
 		indexBody,
 		nil,
 	)
@@ -271,7 +272,7 @@ func TestZReportFailExternal(t *testing.T) {
 	req, err := httpclient.NewHTTPRequest(
 		"localhost:1234/FiscalDrive/ZReport/Info/"+factoryID,
 		http.MethodGet,
-		ContentTypeUrlEncoded,
+		constants.ContentTypeUrlEncoded,
 		indexBody,
 		nil,
 	)
