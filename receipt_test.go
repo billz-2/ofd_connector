@@ -138,3 +138,91 @@ func TestGetTXIDFail(t *testing.T) {
 	require.Error(t, err)
 	assert.ErrorContains(t, err, bodyResponse.Reason)
 }
+
+func TestRegisterTXIDSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+	const (
+		factoryID = "12342131231223123123"
+		txID      = int64(2)
+	)
+	txIDRes := ReceiptInfo{
+		DateTime:   "2023-01-01 00:00:00",
+		TerminalID: "1234567890",
+		ReceiptSeq: 12,
+		FiscalSign: "00000000000",
+		QRCodeURL:  "ADDRESS.com/qr-code.png",
+	}
+	regTxIDReq := RegisterTXIDReq{TXID: txID}
+	regTxIDReqBody, err := json.Marshal(regTxIDReq)
+	require.NoError(t, err)
+	req, err := httpclient.NewHTTPRequest(
+		"localhost:1234/FiscalDrive/Receipt/RegisterTXID/"+factoryID,
+		http.MethodPost,
+		constants.ContentTypeUrlEncoded,
+		regTxIDReqBody,
+		nil,
+	)
+	require.NoError(t, err)
+	body, err := json.Marshal(txIDRes)
+	require.NoError(t, err)
+	httpClient.EXPECT().Request(gomock.Any(), req).
+		Return(&httpclient.HTTPResponse{
+			Body:       body,
+			StatusCode: http.StatusOK,
+		}).Times(1)
+	receipt := &receipt{
+		httpClient:     httpClient,
+		serviceAddress: "localhost:1234",
+		factoryID:      factoryID,
+	}
+
+	receiptInfo, err := receipt.RegisterTXID(ctx, txID)
+	require.NoError(t, err)
+	assert.Equal(t, txIDRes.DateTime, receiptInfo.DateTime)
+	assert.Equal(t, txIDRes.TerminalID, receiptInfo.TerminalID)
+	assert.Equal(t, txIDRes.ReceiptSeq, receiptInfo.ReceiptSeq)
+	assert.Equal(t, txIDRes.FiscalSign, receiptInfo.FiscalSign)
+	assert.Equal(t, txIDRes.QRCodeURL, receiptInfo.QRCodeURL)
+
+}
+
+func TestRegisterTXIDFail(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+	const (
+		factoryID = "12342131231223123123"
+		txID      = int64(2)
+	)
+	regTxIDReq := RegisterTXIDReq{TXID: txID}
+	regTxIDReqBody, err := json.Marshal(regTxIDReq)
+	require.NoError(t, err)
+	req, err := httpclient.NewHTTPRequest(
+		"localhost:1234/FiscalDrive/Receipt/RegisterTXID/"+factoryID,
+		http.MethodPost,
+		constants.ContentTypeUrlEncoded,
+		regTxIDReqBody,
+		nil,
+	)
+	require.NoError(t, err)
+	bodyResponse := errorResponse{
+		Reason: "no card found",
+		Type:   "errors.errorString",
+	}
+	body, err := json.Marshal(bodyResponse)
+	require.NoError(t, err)
+	httpClient.EXPECT().Request(gomock.Any(), req).
+		Return(&httpclient.HTTPResponse{
+			Body:       body,
+			StatusCode: http.StatusNotFound,
+		}).Times(1)
+		
+	receipt := &receipt{
+		httpClient:     httpClient,
+		serviceAddress: "localhost:1234",
+		factoryID:      factoryID,
+	}
+	_, err = receipt.RegisterTXID(ctx, txID)
+	require.Error(t, err)
+	assert.ErrorContains(t, err, bodyResponse.Reason)
+}

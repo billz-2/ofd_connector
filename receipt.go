@@ -12,6 +12,7 @@ import (
 
 type ReceiptI interface {
 	GetTXID(ctx context.Context, req SaleParams) (int64, error)
+	RegisterTXID(ctx context.Context, txID int64) (ReceiptInfo, error)
 }
 
 type receiptConfigs struct {
@@ -121,6 +122,10 @@ type TotalAmount struct {
 	Refund int64 `json:"Refund"`
 }
 
+type RegisterTXIDReq struct {
+	TXID int64 `json:"TXID"`
+}
+
 // GetTXID returns the txID for a sale
 func (r *receipt) GetTXID(ctx context.Context, params SaleParams) (int64, error) {
 	// Prepare the request body
@@ -161,4 +166,45 @@ func (r *receipt) GetTXID(ctx context.Context, params SaleParams) (int64, error)
 	}
 
 	return txID, nil
+}
+
+func (r *receipt) RegisterTXID(ctx context.Context, txID int64) (ReceiptInfo, error) {
+
+	txIDInfo := RegisterTXIDReq{TXID: txID}
+	reqBody, err := json.Marshal(txIDInfo)
+	if err != nil {
+		return ReceiptInfo{}, fmt.Errorf("error marshalling request body: %s", err.Error())
+	}
+	endpoint := fmt.Sprintf(
+		"%s/FiscalDrive/Receipt/RegisterTXID/%s", r.serviceAddress, r.factoryID)
+	req, err := httpclient.NewHTTPRequest(
+		endpoint,
+		http.MethodPost,
+		constants.ContentTypeUrlEncoded,
+		reqBody,
+		nil,
+	)
+	if err != nil {
+		return ReceiptInfo{}, fmt.Errorf("error creating request: %s", err.Error())
+	}
+
+	resp := r.httpClient.Request(ctx, req)
+	if resp.StatusCode != http.StatusOK {
+		errorResp := errorResponse{}
+		if err = json.Unmarshal(resp.Body, &errorResp); err != nil {
+			return ReceiptInfo{}, fmt.Errorf("error unmarshalling error response: %s responseBody: %s",
+				err.Error(),
+				string(resp.Body),
+			)
+		}
+		return ReceiptInfo{}, fmt.Errorf("failed to register txID: %s", errorResp.Reason)
+	}
+
+	receiptInfo := ReceiptInfo{}
+	err = json.Unmarshal(resp.Body, &receiptInfo)
+	if err != nil {
+		return ReceiptInfo{}, fmt.Errorf("error unmarshalling response: %s", err.Error())
+	}
+
+	return receiptInfo, nil
 }
