@@ -1,15 +1,58 @@
 package ofdconnector
 
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+
+	"github.com/billz-2/ofd_connector/internal/constants"
+	"github.com/billz-2/ofd_connector/internal/httpclient"
+)
+
+type ReceiptI interface {
+	GetTXID(ctx context.Context, req SaleParams) (int64, error)
+}
+
+type receiptConfigs struct {
+	ServiceAddress string
+	FactoryID      string
+	HttpClient     httpclient.HTTPClient
+}
+
+// ofdConnector implements the OfdConnector interface
+type receipt struct {
+	serviceAddress string
+	httpClient     httpclient.HTTPClient
+	factoryID      string
+}
+
+func newReceipt(configs receiptConfigs) ReceiptI {
+	return &receipt{
+		serviceAddress: configs.ServiceAddress,
+		httpClient:     configs.HttpClient,
+		factoryID:      configs.FactoryID,
+	}
+}
+
 // SaleParams represents the parameters for a sale operation
 type SaleParams struct {
-	ReceivedCash int64     `json:"ReceivedCash"`
-	ReceivedCard int64     `json:"ReceivedCard"`
-	Time         string    `json:"Time"`
-	Type         int       `json:"Type"`
-	Operation    int       `json:"Operation"`
-	Location     Location  `json:"Location"`
-	Items        []Item    `json:"Items"`
-	ExtraInfo    ExtraInfo `json:"ExtraInfo"`
+	ReceivedCash int64      `json:"ReceivedCash"`
+	ReceivedCard int64      `json:"ReceivedCard"`
+	Time         string     `json:"Time"`
+	Type         int        `json:"Type"`
+	Operation    int        `json:"Operation"`
+	Location     Location   `json:"Location"`
+	Items        []Item     `json:"Items"`
+	ExtraInfo    ExtraInfo  `json:"ExtraInfo"`
+	RefundInfo   RefundInfo `json:"RefundInfo"`
+}
+
+type RefundInfo struct {
+	TerminalID string `json:"TerminalID"` // Fiscal module serial number where the refunded receipt was registered
+	ReceiptSeq uint64 `json:"ReceiptSeq"` // Number of the receipt being refunded
+	DateTime   string `json:"DateTime"`   // Date and time of the refunded receipt (format YYYYMMDDHHMMSS)
+	FiscalSign string `json:"FiscalSign"` // Fiscal sign of the receipt
 }
 
 type Location struct {
@@ -18,7 +61,8 @@ type Location struct {
 }
 
 type CommissionInfo struct {
-	TIN string `json:"TIN"`
+	TIN   string `json:"TIN"`
+	PINFL string `json:"PINFL"`
 }
 
 type Item struct {
@@ -40,15 +84,17 @@ type Item struct {
 
 type ExtraInfo struct {
 	CarNumber         string `json:"CarNumber"`
+	CardType          int    `json:"CardType"`
+	CashedOutFromCard int64  `json:"CashedOutFromCard"`
 	PhoneNumber       string `json:"PhoneNumber"`
 	QRPaymentID       string `json:"QRPaymentID"`
 	QRPaymentProvider int    `json:"QRPaymentProvider"`
-	CashedOutFromCard int64  `json:"CashedOutFromCard"`
 	PPTID             string `json:"PPTID"`
-	CardType          int    `json:"CardType"`
+	PINFL             string `json:"PINFL"`
+	TIN               string `json:"TIN"`
 }
 
-// ReceiptInfo returned from ofd
+// ReceiptInfo returned from ofd, response of RegisterTXID success
 type ReceiptInfo struct {
 	TerminalID string `json:"TerminalID"`
 	ReceiptSeq uint64 `json:"ReceiptSeq"`
@@ -75,4 +121,44 @@ type TotalAmount struct {
 	Refund int64 `json:"Refund"`
 }
 
-///here methods to implement receipt endpoints
+// GetTXID returns the txID for a sale
+func (r *receipt) GetTXID(ctx context.Context, params SaleParams) (int64, error) {
+	// Prepare the request body
+	bodyBytes, err := json.Marshal(params)
+	if err != nil {
+		return 0, fmt.Errorf("error marshalling body: %s", err.Error())
+	}
+
+	endpoint := fmt.Sprintf("%s/FiscalDrive/Receipt/GetTXID/%s", r.serviceAddress, r.factoryID)
+	req, err := httpclient.NewHTTPRequest(
+		endpoint,
+		http.MethodPost,
+		constants.ContentTypeJSON,
+		bodyBytes,
+		nil,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("error creating request: %s", err.Error())
+	}
+
+	resp := r.httpClient.Request(ctx, req)
+	if resp.StatusCode != http.StatusOK {
+		errorResp := errorResponse{}
+		if err = json.Unmarshal(resp.Body, &errorResp); err != nil {
+			return 0, fmt.Errorf("error unmarshalling error response: %s responseBody: %s",
+				err.Error(),
+				string(resp.Body),
+			)
+		}
+		return 0, fmt.Errorf("failed to get txID: %s", errorResp.Reason)
+	}
+
+	// Parse the response
+	var txID int64
+	err = json.Unmarshal(resp.Body, &txID)
+	if err != nil {
+		return 0, fmt.Errorf("error unmarshalling response: %s", err.Error())
+	}
+
+	return txID, nil
+}

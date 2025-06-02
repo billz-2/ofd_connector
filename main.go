@@ -9,6 +9,7 @@ import (
 // OfdConnector interface defines the contract for OFD service operations
 type OfdConnector interface {
 	ZReport() ZReportI
+	Receipt() ReceiptI
 }
 
 type OfdConnectorConfigs struct {
@@ -23,6 +24,7 @@ type ofdConnector struct {
 	httpClient     httpclient.HTTPClient
 	factoryID      string
 	zReport        ZReportI
+	receipt        ReceiptI
 }
 
 // New creates a new instance of OfdConnector
@@ -41,14 +43,25 @@ func New(configs OfdConnectorConfigs) (OfdConnector, error) {
 		HttpClient:     httpClient,
 	})
 
+	receipt := newReceipt(receiptConfigs{
+		ServiceAddress: configs.ServiceAddress,
+		FactoryID:      configs.FactoryID,
+		HttpClient:     httpClient,
+	})
+
 	return &ofdConnector{
 		serviceAddress: configs.ServiceAddress,
 		httpClient:     httpClient,
 		zReport:        zReport,
+		receipt:        receipt,
 		factoryID:      configs.FactoryID,
 	}, nil
 }
 
 func (o *ofdConnector) ZReport() ZReportI {
 	return o.ZReport()
+}
+
+func (o *ofdConnector) Receipt() ReceiptI {
+	return o.Receipt()
 }
