@@ -159,7 +159,7 @@ func TestRegisterTXIDSuccess(t *testing.T) {
 		FiscalSign: "00000000000",
 		QRCodeURL:  "ADDRESS.com/qr-code.png",
 	}
-	regTxIDReq := RegisterTXIDReq{TXID: txID}
+	regTxIDReq := txIDReq{TXID: txID}
 	regTxIDReqBody, err := json.Marshal(regTxIDReq)
 	require.NoError(t, err)
 	req, err := httpclient.NewHTTPRequest(
@@ -203,7 +203,7 @@ func TestRegisterTXIDFail(t *testing.T) {
 		factoryID = "12342131231223123123"
 		txID      = int64(2)
 	)
-	regTxIDReq := RegisterTXIDReq{TXID: txID}
+	regTxIDReq := txIDReq{TXID: txID}
 	regTxIDReqBody, err := json.Marshal(regTxIDReq)
 	require.NoError(t, err)
 	req, err := httpclient.NewHTTPRequest(
@@ -422,6 +422,94 @@ func TestGetDatabaseFilesCountFail(t *testing.T) {
 		gateway: gateway,
 	}
 	_, err = receipt.GetDatabaseFilesCount(ctx, statusFilter.Status)
+	require.Error(t, err)
+	assert.ErrorContains(t, err, bodyResponse.Reason)
+}
+
+func TestResetDatabaseFilesStatusSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+	const (
+		factoryID      = "12342131231223123123"
+		txID           = int64(2)
+		serviceAddress = "localhost:1234"
+	)
+
+	regTxIDReq := txIDReq{TXID: txID}
+	regTxIDReqBody, err := json.Marshal(regTxIDReq)
+	require.NoError(t, err)
+	req, err := httpclient.NewHTTPRequest(
+		serviceAddress+databaseFilesStatusReset,
+		http.MethodPost,
+		constants.ContentTypeUrlEncoded,
+		regTxIDReqBody,
+		nil,
+	)
+	require.NoError(t, err)
+
+	httpClient.EXPECT().Request(gomock.Any(), req).
+		Return(&httpclient.HTTPResponse{
+			Body:       nil,
+			StatusCode: http.StatusOK,
+		}).Times(1)
+
+	gateway := gateway.New(gateway.Configs{
+		HttpClient:     httpClient,
+		ServiceAddress: serviceAddress,
+		FactoryID:      factoryID,
+	})
+	receipt := &receipt{
+		gateway: gateway,
+	}
+
+	err = receipt.ResetDatabaseFilesStatus(ctx, txID)
+	require.NoError(t, err)
+}
+
+func TestResetDatabaseFilesStatusFail(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+	const (
+		factoryID      = "12342131231223123123"
+		txID           = int64(2)
+		serviceAddress = "localhost:1234"
+	)
+
+	regTxIDReq := txIDReq{TXID: txID}
+	regTxIDReqBody, err := json.Marshal(regTxIDReq)
+	require.NoError(t, err)
+	req, err := httpclient.NewHTTPRequest(
+		serviceAddress+databaseFilesStatusReset,
+		http.MethodPost,
+		constants.ContentTypeUrlEncoded,
+		regTxIDReqBody,
+		nil,
+	)
+	require.NoError(t, err)
+
+	bodyResponse := errorResponse{
+		Reason: "internal error",
+		Type:   "errors.errorString",
+	}
+	body, err := json.Marshal(bodyResponse)
+	require.NoError(t, err)
+
+	httpClient.EXPECT().Request(gomock.Any(), req).
+		Return(&httpclient.HTTPResponse{
+			Body:       body,
+			StatusCode: http.StatusInternalServerError,
+		}).Times(1)
+
+	gateway := gateway.New(gateway.Configs{
+		HttpClient:     httpClient,
+		ServiceAddress: serviceAddress,
+		FactoryID:      factoryID,
+	})
+	receipt := &receipt{
+		gateway: gateway,
+	}
+
+	err = receipt.ResetDatabaseFilesStatus(ctx, txID)
 	require.Error(t, err)
 	assert.ErrorContains(t, err, bodyResponse.Reason)
 }

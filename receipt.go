@@ -11,10 +11,12 @@ import (
 )
 
 const (
-	receiptDatabaseFilesCountEndpoint = "/FiscalDrive/Receipt/Database/Files/Count"
-	receiptInfoEndpoint               = "/FiscalDrive/Receipt/Info/"
-	receiptRegisterTXIDEndpoint       = "/FiscalDrive/Receipt/RegisterTXID/"
-	receiptGetTXIDEndpoint            = "/FiscalDrive/Receipt/GetTXID/"
+	receiptInfoEndpoint         = "/FiscalDrive/Receipt/Info/"
+	receiptRegisterTXIDEndpoint = "/FiscalDrive/Receipt/RegisterTXID/"
+	receiptGetTXIDEndpoint      = "/FiscalDrive/Receipt/GetTXID/"
+
+	databaseFilesCountEndpoint = "/Database/Files/Count"
+	databaseFilesStatusReset  = "/DataBase/Files/Status/Reset"
 )
 
 type ReceiptI interface {
@@ -22,6 +24,7 @@ type ReceiptI interface {
 	RegisterTXID(ctx context.Context, txID int64) (ReceiptInfo, error)
 	GetReceiptInfo(ctx context.Context, index uint32) (ReceiptFullInfo, error)
 	GetDatabaseFilesCount(ctx context.Context, status uint16) (map[string]int64, error)
+	ResetDatabaseFilesStatus(ctx context.Context, txID int64) error
 }
 
 type receiptConfigs struct {
@@ -127,7 +130,7 @@ type TotalAmount struct {
 	Refund int64 `json:"Refund"`
 }
 
-type RegisterTXIDReq struct {
+type txIDReq struct {
 	TXID int64 `json:"TXID"`
 }
 
@@ -175,7 +178,7 @@ func (r *receipt) GetTXID(ctx context.Context, params SaleParams) (int64, error)
 
 func (r *receipt) RegisterTXID(ctx context.Context, txID int64) (ReceiptInfo, error) {
 
-	txIDInfo := RegisterTXIDReq{TXID: txID}
+	txIDInfo := txIDReq{TXID: txID}
 	reqBody, err := json.Marshal(txIDInfo)
 	if err != nil {
 		return ReceiptInfo{}, fmt.Errorf("error marshalling request body: %s", err.Error())
@@ -262,7 +265,7 @@ func (r *receipt) GetDatabaseFilesCount(ctx context.Context, status uint16) (map
 	}
 	resp, err := r.gateway.HTTPRequest(
 		ctx,
-		receiptDatabaseFilesCountEndpoint,
+		databaseFilesCountEndpoint,
 		http.MethodPost,
 		constants.ContentTypeUrlEncoded,
 		bodyBytes,
@@ -289,4 +292,36 @@ func (r *receipt) GetDatabaseFilesCount(ctx context.Context, status uint16) (map
 	}
 
 	return filesCount, nil
+}
+
+func (r *receipt) ResetDatabaseFilesStatus(ctx context.Context, txID int64) error {
+	txIDInfo := txIDReq{TXID: txID}
+	reqBody, err := json.Marshal(txIDInfo)
+	if err != nil {
+		return fmt.Errorf("error marshalling request body: %s", err.Error())
+	}
+	resp, err := r.gateway.HTTPRequest(
+		ctx,
+		databaseFilesStatusReset,
+		http.MethodPost,
+		constants.ContentTypeUrlEncoded,
+		reqBody,
+		nil,
+	)
+	if err != nil {
+		return fmt.Errorf("error creating request: %s", err.Error())
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		errorResp := errorResponse{}
+		if err = json.Unmarshal(resp.Body, &errorResp); err != nil {
+			return fmt.Errorf("error unmarshalling error response: %s responseBody: %s",
+				err.Error(),
+				string(resp.Body),
+			)
+		}
+		return fmt.Errorf("failed to register txID: %s", errorResp.Reason)
+	}
+
+	return nil
 }
