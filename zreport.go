@@ -68,7 +68,7 @@ func (o zReport) OpenZreport(ctx context.Context, createdTime string) error {
 		return fmt.Errorf("error marshalling body: %s", err.Error())
 	}
 
-	endpoint := fmt.Sprintf("/FiscalDrive/ZReport/Open/%s", factoryID)
+	endpoint := o.gateway.FactoryEndpoint("/FiscalDrive/ZReport/Open/")
 	resp, err := o.gateway.HTTPRequest(
 		ctx,
 		endpoint,
@@ -110,7 +110,7 @@ func (o zReport) CloseZreport(ctx context.Context, closedTime string) error {
 		return fmt.Errorf("error marshalling body: %s", err.Error())
 	}
 
-	endpoint := fmt.Sprintf("/FiscalDrive/ZReport/Close/%s", factoryID)
+	endpoint :=  o.gateway.FactoryEndpoint("/FiscalDrive/ZReport/Close/")
 	resp, err := o.gateway.HTTPRequest(
 		ctx,
 		endpoint,
@@ -145,7 +145,7 @@ func (o zReport) GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo,
 		return ZReportInfo{}, fmt.Errorf("error marshalling body: %s", err.Error())
 	}
 
-	endpoint := fmt.Sprintf("/FiscalDrive/ZReport/Info/%s", factoryID)
+	endpoint := o.gateway.FactoryEndpoint("/FiscalDrive/ZReport/Info/")
 	resp, err := o.gateway.HTTPRequest(
 		ctx,
 		endpoint,

@@ -132,7 +132,7 @@ func (r *receipt) GetTXID(ctx context.Context, params SaleParams) (int64, error)
 		return 0, fmt.Errorf("error marshalling body: %s", err.Error())
 	}
 
-	endpoint := fmt.Sprintf("/FiscalDrive/Receipt/GetTXID/%s", factoryID)
+	endpoint := r.gateway.FactoryEndpoint("/FiscalDrive/Receipt/GetTXID/")
 	resp, err := r.gateway.HTTPRequest(
 		ctx,
 		endpoint,
@@ -173,8 +173,7 @@ func (r *receipt) RegisterTXID(ctx context.Context, txID int64) (ReceiptInfo, er
 	if err != nil {
 		return ReceiptInfo{}, fmt.Errorf("error marshalling request body: %s", err.Error())
 	}
-	endpoint := fmt.Sprintf(
-		"/FiscalDrive/Receipt/RegisterTXID/%s", factoryID)
+	endpoint := r.gateway.FactoryEndpoint("/FiscalDrive/Receipt/RegisterTXID/")
 	resp, err := r.gateway.HTTPRequest(
 		ctx,
 		endpoint,
@@ -212,7 +211,7 @@ func (r *receipt) GetReceiptInfo(ctx context.Context, index uint32) (ReceiptFull
 	if err != nil {
 		return ReceiptFullInfo{}, fmt.Errorf("error marshalling body: %s", err.Error())
 	}
-	endpoint := fmt.Sprintf("/FiscalDrive/Receipt/Info/%s", factoryID)
+	endpoint := r.gateway.FactoryEndpoint("/FiscalDrive/Receipt/Info/")
 	resp, err := r.gateway.HTTPRequest(
 		ctx,
 		endpoint,

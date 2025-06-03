@@ -19,8 +19,6 @@ type OfdConnectorConfigs struct {
 	FactoryID             string
 }
 
-var factoryID string
-
 // ofdConnector implements the OfdConnector interface
 type ofdConnector struct {
 	zReport ZReportI
@@ -36,12 +34,10 @@ func New(configs OfdConnectorConfigs) (OfdConnector, error) {
 		return nil, fmt.Errorf("invalid FactoryID")
 	}
 
-	// set as global variable, to use accross all methods
-	factoryID = configs.FactoryID
-
 	httpClient := httpclient.NewHTTPClient(configs.RequestTimeOutSeconds)
 	gateway := gateway.New(gateway.Configs{
 		ServiceAddress: configs.ServiceAddress,
+		FactoryID:      configs.FactoryID,
 		HttpClient:     httpClient,
 	})
 	zReport := newZReport(zReportConfigs{

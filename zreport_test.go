@@ -18,7 +18,7 @@ func TestZreportOpenSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
-	factoryID = "12342131231223123123"
+	const factoryID = "12342131231223123123"
 	createdAtTime := "2025-05-31 12:04:00"
 	reqBody, err := json.Marshal(dateTime{DateTime: createdAtTime})
 	require.NoError(t, err)
@@ -39,6 +39,7 @@ func TestZreportOpenSuccess(t *testing.T) {
 
 	gateway := gateway.New(gateway.Configs{
 		ServiceAddress: "localhost:1234",
+		FactoryID:      factoryID,
 		HttpClient:     httpClient,
 	})
 	zReport := &zReport{
@@ -52,11 +53,12 @@ func TestZreportOpenSuccess(t *testing.T) {
 func TestZreportOpenFailInvalidTime(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	factoryID = "12342131231223123123"
+	const factoryID = "12342131231223123123"
 	createdAtTime := "2025-05-31T12:04:00"
 
 	gateway := gateway.New(gateway.Configs{
 		ServiceAddress: "localhost:1234",
+		FactoryID:      factoryID,
 		HttpClient:     httpClient,
 	})
 	zReport := &zReport{
@@ -99,6 +101,7 @@ func TestZreportOpenFailExternal(t *testing.T) {
 		}).Times(1)
 	gateway := gateway.New(gateway.Configs{
 		ServiceAddress: "localhost:1234",
+		FactoryID:      factoryID,
 		HttpClient:     httpClient,
 	})
 	zReport := &zReport{
@@ -115,7 +118,7 @@ func TestZreportCloseSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
-	factoryID = "12342131231223123123"
+	const factoryID = "12342131231223123123"
 	createdAtTime := "2025-05-31 12:04:00"
 	reqBody, err := json.Marshal(dateTime{DateTime: createdAtTime})
 	require.NoError(t, err)
@@ -136,6 +139,7 @@ func TestZreportCloseSuccess(t *testing.T) {
 
 	gateway := gateway.New(gateway.Configs{
 		ServiceAddress: "localhost:1234",
+		FactoryID:      factoryID,
 		HttpClient:     httpClient,
 	})
 	zReport := &zReport{
@@ -149,10 +153,11 @@ func TestZreportCloseSuccess(t *testing.T) {
 func TestZreportCloseFailInvalidTime(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	factoryID = "12342131231223123123"
+	const factoryID = "12342131231223123123"
 	createdAtTime := "2025-05-31T12:04:00"
 	gateway := gateway.New(gateway.Configs{
 		ServiceAddress: "localhost:1234",
+		FactoryID:      factoryID,
 		HttpClient:     httpClient,
 	})
 	zReport := &zReport{
@@ -167,7 +172,7 @@ func TestZreportCloseFailInvalidTime(t *testing.T) {
 func TestZReportCloseFailExternal(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	factoryID = "12342131231223123123"
+	const factoryID = "12342131231223123123"
 	createdAtTime := "2025-05-31 12:04:00"
 	reqBody, err := json.Marshal(dateTime{DateTime: createdAtTime})
 	require.NoError(t, err)
@@ -194,6 +199,7 @@ func TestZReportCloseFailExternal(t *testing.T) {
 		}).Times(1)
 	gateway := gateway.New(gateway.Configs{
 		ServiceAddress: "localhost:1234",
+		FactoryID:      factoryID,
 		HttpClient:     httpClient,
 	})
 	zReport := &zReport{
@@ -209,7 +215,7 @@ func TestZReportInfoSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
-	factoryID = "12342131231223123123"
+	const factoryID = "12342131231223123123"
 
 	indexData := indexInfo{Index: 0}
 	indexBody, err := json.Marshal(indexData)
@@ -256,6 +262,7 @@ func TestZReportInfoSuccess(t *testing.T) {
 
 	gateway := gateway.New(gateway.Configs{
 		ServiceAddress: "localhost:1234",
+		FactoryID:      factoryID,
 		HttpClient:     httpClient,
 	})
 	zReport := &zReport{
@@ -280,7 +287,7 @@ func TestZReportInfoSuccess(t *testing.T) {
 func TestZReportFailExternal(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	factoryID = "12342131231223123123"
+	const factoryID = "12342131231223123123"
 	indexData := indexInfo{Index: 0}
 	indexBody, err := json.Marshal(indexData)
 	require.NoError(t, err)
@@ -306,6 +313,7 @@ func TestZReportFailExternal(t *testing.T) {
 		}).Times(1)
 	gateway := gateway.New(gateway.Configs{
 		ServiceAddress: "localhost:1234",
+		FactoryID:      factoryID,
 		HttpClient:     httpClient,
 	})
 	zReport := &zReport{
