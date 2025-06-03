@@ -10,6 +10,10 @@ import (
 	"github.com/billz-2/ofd_connector/internal/httpclient"
 )
 
+const (
+	fiscalDriveListEndpoint = "/FiscalDrive/List"
+)
+
 type FiscalDriveReaderInfo struct {
 	ReaderName    string `json:"ReaderName"`
 	ATR           string `json:"ATR"`
@@ -53,7 +57,7 @@ func NewFiscalDriveLister(configs OfdConnectorConfigs) (FiscalDriveLister, error
 func (o fiscalDriveLister) ListFiscalDrives(ctx context.Context) ([]FiscalDriveReaderInfo, error) {
 	// Implementation for /FiscalDrive/List endpoint
 	req, err := httpclient.NewHTTPRequest(
-		o.serviceAddress+"/FiscalDrive/List",
+		o.serviceAddress+fiscalDriveListEndpoint,
 		http.MethodPost,
 		constants.ContentTypeJSON,
 		nil,

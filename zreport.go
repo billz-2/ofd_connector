@@ -11,6 +11,12 @@ import (
 	"github.com/billz-2/ofd_connector/internal/validators"
 )
 
+const (
+	zReportCloseEndpoint = "/FiscalDrive/ZReport/Close/"
+	zReportInfoEndpoint  = "/FiscalDrive/ZReport/Info/"
+	zReportOpenEndpoint  = "/FiscalDrive/ZReport/Open/"
+)
+
 type ZReportI interface {
 	OpenZreport(ctx context.Context, createdTime string) error
 	CloseZreport(ctx context.Context, closedTime string) error
@@ -68,7 +74,7 @@ func (o zReport) OpenZreport(ctx context.Context, createdTime string) error {
 		return fmt.Errorf("error marshalling body: %s", err.Error())
 	}
 
-	endpoint := o.gateway.FactoryEndpoint("/FiscalDrive/ZReport/Open/")
+	endpoint := o.gateway.FactoryEndpoint(zReportOpenEndpoint)
 	resp, err := o.gateway.HTTPRequest(
 		ctx,
 		endpoint,
@@ -110,7 +116,7 @@ func (o zReport) CloseZreport(ctx context.Context, closedTime string) error {
 		return fmt.Errorf("error marshalling body: %s", err.Error())
 	}
 
-	endpoint :=  o.gateway.FactoryEndpoint("/FiscalDrive/ZReport/Close/")
+	endpoint := o.gateway.FactoryEndpoint(zReportCloseEndpoint)
 	resp, err := o.gateway.HTTPRequest(
 		ctx,
 		endpoint,
@@ -145,7 +151,7 @@ func (o zReport) GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo,
 		return ZReportInfo{}, fmt.Errorf("error marshalling body: %s", err.Error())
 	}
 
-	endpoint := o.gateway.FactoryEndpoint("/FiscalDrive/ZReport/Info/")
+	endpoint := o.gateway.FactoryEndpoint(receiptInfoEndpoint)
 	resp, err := o.gateway.HTTPRequest(
 		ctx,
 		endpoint,

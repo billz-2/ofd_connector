@@ -10,6 +10,13 @@ import (
 	"github.com/billz-2/ofd_connector/internal/gateway"
 )
 
+const (
+	receiptDatabaseFilesCountEndpoint = "/FiscalDrive/Receipt/Database/Files/Count"
+	receiptInfoEndpoint               = "/FiscalDrive/Receipt/Info/"
+	receiptRegisterTXIDEndpoint       = "/FiscalDrive/Receipt/RegisterTXID/"
+	receiptGetTXIDEndpoint            = "/FiscalDrive/Receipt/GetTXID/"
+)
+
 type ReceiptI interface {
 	GetTXID(ctx context.Context, req SaleParams) (int64, error)
 	RegisterTXID(ctx context.Context, txID int64) (ReceiptInfo, error)
@@ -132,7 +139,7 @@ func (r *receipt) GetTXID(ctx context.Context, params SaleParams) (int64, error)
 		return 0, fmt.Errorf("error marshalling body: %s", err.Error())
 	}
 
-	endpoint := r.gateway.FactoryEndpoint("/FiscalDrive/Receipt/GetTXID/")
+	endpoint := r.gateway.FactoryEndpoint(receiptGetTXIDEndpoint)
 	resp, err := r.gateway.HTTPRequest(
 		ctx,
 		endpoint,
@@ -173,7 +180,7 @@ func (r *receipt) RegisterTXID(ctx context.Context, txID int64) (ReceiptInfo, er
 	if err != nil {
 		return ReceiptInfo{}, fmt.Errorf("error marshalling request body: %s", err.Error())
 	}
-	endpoint := r.gateway.FactoryEndpoint("/FiscalDrive/Receipt/RegisterTXID/")
+	endpoint := r.gateway.FactoryEndpoint(receiptRegisterTXIDEndpoint)
 	resp, err := r.gateway.HTTPRequest(
 		ctx,
 		endpoint,
@@ -211,7 +218,7 @@ func (r *receipt) GetReceiptInfo(ctx context.Context, index uint32) (ReceiptFull
 	if err != nil {
 		return ReceiptFullInfo{}, fmt.Errorf("error marshalling body: %s", err.Error())
 	}
-	endpoint := r.gateway.FactoryEndpoint("/FiscalDrive/Receipt/Info/")
+	endpoint := r.gateway.FactoryEndpoint(receiptInfoEndpoint)
 	resp, err := r.gateway.HTTPRequest(
 		ctx,
 		endpoint,
@@ -255,7 +262,7 @@ func (r *receipt) GetDatabaseFilesCount(ctx context.Context, status uint16) (map
 	}
 	resp, err := r.gateway.HTTPRequest(
 		ctx,
-		"/FiscalDrive/Receipt/Database/Files/Count",
+		receiptDatabaseFilesCountEndpoint,
 		http.MethodPost,
 		constants.ContentTypeUrlEncoded,
 		bodyBytes,
