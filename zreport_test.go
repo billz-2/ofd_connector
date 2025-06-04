@@ -37,7 +37,7 @@ func TestZreportOpenSuccess(t *testing.T) {
 			StatusCode: 200,
 		}).Times(1)
 
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
 		HttpClient:     httpClient,
@@ -56,7 +56,7 @@ func TestZreportOpenFailInvalidTime(t *testing.T) {
 	const factoryID = "12342131231223123123"
 	createdAtTime := "2025-05-31T12:04:00"
 
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
 		HttpClient:     httpClient,
@@ -99,7 +99,7 @@ func TestZreportOpenFailExternal(t *testing.T) {
 			Body:       body,
 			StatusCode: 400,
 		}).Times(1)
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
 		HttpClient:     httpClient,
@@ -137,7 +137,7 @@ func TestZreportCloseSuccess(t *testing.T) {
 			StatusCode: 200,
 		}).Times(1)
 
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
 		HttpClient:     httpClient,
@@ -155,7 +155,7 @@ func TestZreportCloseFailInvalidTime(t *testing.T) {
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 	const factoryID = "12342131231223123123"
 	createdAtTime := "2025-05-31T12:04:00"
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
 		HttpClient:     httpClient,
@@ -197,7 +197,7 @@ func TestZReportCloseFailExternal(t *testing.T) {
 			Body:       body,
 			StatusCode: 400,
 		}).Times(1)
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
 		HttpClient:     httpClient,
@@ -260,7 +260,7 @@ func TestZReportInfoSuccess(t *testing.T) {
 			StatusCode: 200,
 		}).Times(1)
 
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
 		HttpClient:     httpClient,
@@ -311,7 +311,7 @@ func TestZReportFailExternal(t *testing.T) {
 			Body:       body,
 			StatusCode: 400,
 		}).Times(1)
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
 		HttpClient:     httpClient,

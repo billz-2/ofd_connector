@@ -13,7 +13,7 @@ type OfdConnector interface {
 	Receipt() ReceiptI
 }
 
-type OfdConnectorConfigs struct {
+type OfdConnectorConfig struct {
 	ServiceAddress        string
 	RequestTimeOutSeconds int
 	FactoryID             string
@@ -26,24 +26,24 @@ type ofdConnector struct {
 }
 
 // New creates a new instance of OfdConnector
-func New(configs OfdConnectorConfigs) (OfdConnector, error) {
-	if configs.ServiceAddress == "" {
+func New(config OfdConnectorConfig) (OfdConnector, error) {
+	if config.ServiceAddress == "" {
 		return nil, fmt.Errorf("invalid url address")
 	}
-	if configs.FactoryID == "" {
+	if config.FactoryID == "" {
 		return nil, fmt.Errorf("invalid FactoryID")
 	}
 
-	httpClient := httpclient.NewHTTPClient(configs.RequestTimeOutSeconds)
-	gateway := gateway.New(gateway.Configs{
-		ServiceAddress: configs.ServiceAddress,
-		FactoryID:      configs.FactoryID,
+	httpClient := httpclient.NewHTTPClient(config.RequestTimeOutSeconds)
+	gateway := gateway.New(gateway.Config{
+		ServiceAddress: config.ServiceAddress,
+		FactoryID:      config.FactoryID,
 		HttpClient:     httpClient,
 	})
-	zReport := newZReport(zReportConfigs{
+	zReport := newZReport(zReportConfig{
 		gateway: gateway,
 	})
-	receipt := newReceipt(receiptConfigs{
+	receipt := newReceipt(receiptConfig{
 		Gateway: gateway,
 	})
 

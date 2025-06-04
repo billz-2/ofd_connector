@@ -26,12 +26,6 @@ func mySetupFunction() {
 	println("start httpclient package testing")
 
 	ctx = context.Background()
-
-	err := os.Setenv("ENV_FILE_PATH", "../../../configs/.env.testing")
-	if err != nil {
-		panic(err)
-	}
-
 }
 
 func myTeardownFunction() {

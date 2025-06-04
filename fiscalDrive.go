@@ -38,17 +38,17 @@ type fiscalDriveLister struct {
 }
 
 // NewFiscalDriveLister returns FiscalDriveLister that lists available fiscal drive readers in the system
-func NewFiscalDriveLister(configs OfdConnectorConfigs) (FiscalDriveLister, error) {
-	if configs.ServiceAddress == "" {
+func NewFiscalDriveLister(config OfdConnectorConfig) (FiscalDriveLister, error) {
+	if config.ServiceAddress == "" {
 		return nil, fmt.Errorf("invalid url address")
 	}
 
 	httpClient := httpclient.NewHTTPClient(
-		configs.RequestTimeOutSeconds,
+		config.RequestTimeOutSeconds,
 	)
 
 	return &fiscalDriveLister{
-		serviceAddress: configs.ServiceAddress,
+		serviceAddress: config.ServiceAddress,
 		httpClient:     httpClient,
 	}, nil
 }

@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestNew(t *testing.T) {
-	ofd, err := New(OfdConnectorConfigs{
+	ofd, err := New(OfdConnectorConfig{
 		ServiceAddress:        "localhost:1232",
 		RequestTimeOutSeconds: 10,
 		FactoryID:             "12342131231223123123",
@@ -35,7 +35,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestNewInvalidAddress(t *testing.T) {
-	ofd, err := New(OfdConnectorConfigs{
+	ofd, err := New(OfdConnectorConfig{
 		ServiceAddress:        "",
 		RequestTimeOutSeconds: 10,
 		FactoryID:             "12342131231223123123",

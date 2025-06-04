@@ -27,7 +27,7 @@ type ReceiptI interface {
 	ResetDatabaseFilesStatus(ctx context.Context, txID int64) error
 }
 
-type receiptConfigs struct {
+type receiptConfig struct {
 	Gateway gateway.GatewayI
 }
 
@@ -36,9 +36,9 @@ type receipt struct {
 	gateway gateway.GatewayI
 }
 
-func newReceipt(configs receiptConfigs) ReceiptI {
+func newReceipt(config receiptConfig) ReceiptI {
 	return &receipt{
-		gateway: configs.Gateway,
+		gateway: config.Gateway,
 	}
 }
 

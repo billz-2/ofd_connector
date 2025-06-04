@@ -88,7 +88,7 @@ func TestGetTXIDSuccess(t *testing.T) {
 			Body:       body,
 			StatusCode: http.StatusOK,
 		}).Times(1)
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		HttpClient:     httpClient,
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
@@ -131,7 +131,7 @@ func TestGetTXIDFail(t *testing.T) {
 			Body:       body,
 			StatusCode: http.StatusNotFound,
 		}).Times(1)
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		HttpClient:     httpClient,
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
@@ -177,7 +177,7 @@ func TestRegisterTXIDSuccess(t *testing.T) {
 			Body:       body,
 			StatusCode: http.StatusOK,
 		}).Times(1)
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		HttpClient:     httpClient,
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
@@ -226,7 +226,7 @@ func TestRegisterTXIDFail(t *testing.T) {
 			StatusCode: http.StatusNotFound,
 		}).Times(1)
 
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		HttpClient:     httpClient,
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
@@ -280,7 +280,7 @@ func TestGetReceiptInfo(t *testing.T) {
 			StatusCode: http.StatusOK,
 		}).Times(1)
 
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		HttpClient:     httpClient,
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
@@ -333,7 +333,7 @@ func TestGetReceiptInfoFail(t *testing.T) {
 			Body:       body,
 			StatusCode: http.StatusNotFound,
 		}).Times(1)
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		HttpClient:     httpClient,
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
@@ -359,7 +359,7 @@ func TestGetDatabaseFilesCountSuccess(t *testing.T) {
 	statusBody, err := json.Marshal(statusFilter)
 	require.NoError(t, err)
 	req, err := httpclient.NewHTTPRequest(
-		"localhost:1234/FiscalDrive/Receipt/Database/Files/Count",
+		"localhost:1234/Database/Files/Count",
 		http.MethodPost,
 		constants.ContentTypeUrlEncoded,
 		statusBody,
@@ -373,7 +373,7 @@ func TestGetDatabaseFilesCountSuccess(t *testing.T) {
 			Body:       body,
 			StatusCode: http.StatusOK,
 		}).Times(1)
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		HttpClient:     httpClient,
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
@@ -395,7 +395,7 @@ func TestGetDatabaseFilesCountFail(t *testing.T) {
 	statusBody, err := json.Marshal(statusFilter)
 	require.NoError(t, err)
 	req, err := httpclient.NewHTTPRequest(
-		"localhost:1234/FiscalDrive/Receipt/Database/Files/Count",
+		"localhost:1234/Database/Files/Count",
 		http.MethodPost,
 		constants.ContentTypeUrlEncoded,
 		statusBody,
@@ -413,7 +413,7 @@ func TestGetDatabaseFilesCountFail(t *testing.T) {
 			Body:       body,
 			StatusCode: http.StatusNotFound,
 		}).Times(1)
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		HttpClient:     httpClient,
 		ServiceAddress: "localhost:1234",
 		FactoryID:      factoryID,
@@ -453,7 +453,7 @@ func TestResetDatabaseFilesStatusSuccess(t *testing.T) {
 			StatusCode: http.StatusOK,
 		}).Times(1)
 
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		HttpClient:     httpClient,
 		ServiceAddress: serviceAddress,
 		FactoryID:      factoryID,
@@ -500,7 +500,7 @@ func TestResetDatabaseFilesStatusFail(t *testing.T) {
 			StatusCode: http.StatusInternalServerError,
 		}).Times(1)
 
-	gateway := gateway.New(gateway.Configs{
+	gateway := gateway.New(gateway.Config{
 		HttpClient:     httpClient,
 		ServiceAddress: serviceAddress,
 		FactoryID:      factoryID,

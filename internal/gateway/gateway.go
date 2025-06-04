@@ -18,17 +18,17 @@ type gateway struct {
 	httpClient     httpclient.HTTPClient
 }
 
-type Configs struct {
+type Config struct {
 	ServiceAddress string
 	FactoryID      string
 	HttpClient     httpclient.HTTPClient
 }
 
-func New(configs Configs) gateway {
+func New(config Config) gateway {
 	return gateway{
-		serviceAddress: configs.ServiceAddress,
-		httpClient:     configs.HttpClient,
-		factoryID:      configs.FactoryID,
+		serviceAddress: config.ServiceAddress,
+		httpClient:     config.HttpClient,
+		factoryID:      config.FactoryID,
 	}
 }
 

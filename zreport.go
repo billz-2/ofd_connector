@@ -23,7 +23,7 @@ type ZReportI interface {
 	GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo, error)
 }
 
-type zReportConfigs struct {
+type zReportConfig struct {
 	gateway gateway.GatewayI
 }
 
@@ -32,9 +32,9 @@ type zReport struct {
 	gateway gateway.GatewayI
 }
 
-func newZReport(configs zReportConfigs) ZReportI {
+func newZReport(config zReportConfig) ZReportI {
 	return &zReport{
-		gateway: configs.gateway,
+		gateway: config.gateway,
 	}
 }
 
@@ -151,7 +151,7 @@ func (o zReport) GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo,
 		return ZReportInfo{}, fmt.Errorf("error marshalling body: %s", err.Error())
 	}
 
-	endpoint := o.gateway.FactoryEndpoint(receiptInfoEndpoint)
+	endpoint := o.gateway.FactoryEndpoint(zReportInfoEndpoint)
 	resp, err := o.gateway.HTTPRequest(
 		ctx,
 		endpoint,
@@ -180,6 +180,6 @@ func (o zReport) GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo,
 	if err := json.Unmarshal(resp.Body, &zReportInfo); err != nil {
 		return ZReportInfo{}, fmt.Errorf("error unmarshalling response: %s", err.Error())
 	}
-	
+
 	return zReportInfo, nil
 }
