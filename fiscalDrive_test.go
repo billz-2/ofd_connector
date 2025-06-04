@@ -13,89 +13,94 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestListFiscalDrivesSuccess(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-
-	req, err := httpclient.NewHTTPRequest(
-		"localhost:1234/FiscalDrive/List",
-		http.MethodPost,
-		constants.ContentTypeJSON,
-		nil,
-		nil,
-	)
-	require.NoError(t, err)
-
-	body, err := json.Marshal([]FiscalDriveReaderInfo{
+func TestListFiscalDrives(t *testing.T) {
+	tests := []struct {
+		name           string
+		responseBody   interface{}
+		responseStatus int
+		expectedError  string
+		expectedDrives []FiscalDriveReaderInfo
+	}{
 		{
-			FactoryID:     "12342131231223123123",
-			ReaderName:    "reader1",
-			ATR:           "1a8f800180318065b08503010101030201040105",
-			AppletVersion: "0400",
+			name: "success",
+			responseBody: []FiscalDriveReaderInfo{
+				{
+					FactoryID:     "12342131231223123123",
+					ReaderName:    "reader1",
+					ATR:           "1a8f800180318065b08503010101030201040105",
+					AppletVersion: "0400",
+				},
+				{
+					FactoryID:     "25123123123123123126",
+					ReaderName:    "reader2",
+					ATR:           "3b8f800180318065b08503010101030201040105",
+					AppletVersion: "0200",
+				},
+			},
+			responseStatus: 200,
+			expectedDrives: []FiscalDriveReaderInfo{
+				{
+					FactoryID:     "12342131231223123123",
+					ReaderName:    "reader1",
+					ATR:           "1a8f800180318065b08503010101030201040105",
+					AppletVersion: "0400",
+				},
+				{
+					FactoryID:     "25123123123123123126",
+					ReaderName:    "reader2",
+					ATR:           "3b8f800180318065b08503010101030201040105",
+					AppletVersion: "0200",
+				},
+			},
 		},
 		{
-			FactoryID:     "25123123123123123126",
-			ReaderName:    "reader2",
-			ATR:           "3b8f800180318065b08503010101030201040105",
-			AppletVersion: "0200",
+			name: "failure",
+			responseBody: errorResponse{
+				Reason: "no card connected",
+				Type:   "errors.errorString",
+			},
+			responseStatus: 400,
+			expectedError: "no card connected",
 		},
-	})
-	require.NoError(t, err)
-	httpClient.EXPECT().Request(gomock.Any(), req).
-		Return(&httpclient.HTTPResponse{
-			Body:       body,
-			StatusCode: 200,
-		}).Times(1)
-
-	fdLister := &fiscalDriveLister{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
 	}
 
-	got, err := fdLister.ListFiscalDrives(ctx)
-	require.NoError(t, err)
-	require.Len(t, got, 2)
-	assert.Equal(t, "12342131231223123123", got[0].FactoryID)
-	assert.Equal(t, "reader1", got[0].ReaderName)
-	assert.Equal(t, "1a8f800180318065b08503010101030201040105", got[0].ATR)
-	assert.Equal(t, "0400", got[0].AppletVersion)
-	assert.Equal(t, "25123123123123123126", got[1].FactoryID)
-	assert.Equal(t, "reader2", got[1].ReaderName)
-	assert.Equal(t, "3b8f800180318065b08503010101030201040105", got[1].ATR)
-	assert.Equal(t, "0200", got[1].AppletVersion)
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
-func TestListFiscalDrives_Fail(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+			req, err := httpclient.NewHTTPRequest(
+				"localhost:1234/FiscalDrive/List",
+				http.MethodPost,
+				constants.ContentTypeJSON,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
 
-	req, err := httpclient.NewHTTPRequest(
-		"localhost:1234/FiscalDrive/List",
-		http.MethodPost,
-		constants.ContentTypeJSON,
-		nil,
-		nil,
-	)
-	require.NoError(t, err)
+			body, err := json.Marshal(tt.responseBody)
+			require.NoError(t, err)
+			httpClient.EXPECT().Request(gomock.Any(), req).
+				Return(&httpclient.HTTPResponse{
+					Body:       body,
+					StatusCode: tt.responseStatus,
+				}).Times(1)
 
-	body, err := json.Marshal(errorResponse{
-		Reason: "no card connected",
-		Type:   "errors.errorString",
-	})
-	require.NoError(t, err)
-	httpClient.EXPECT().Request(gomock.Any(), req).
-		Return(&httpclient.HTTPResponse{
-			Body:       body,
-			StatusCode: 400,
-		}).Times(1)
+			fdLister := &fiscalDriveLister{
+				httpClient:     httpClient,
+				serviceAddress: "localhost:1234",
+			}
 
-	fdLister := &fiscalDriveLister{
-		httpClient:     httpClient,
-		serviceAddress: "localhost:1234",
+			got, err := fdLister.ListFiscalDrives(ctx)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.ErrorContains(t, err, tt.expectedError)
+				assert.Nil(t, got)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expectedDrives, got)
+			}
+		})
 	}
-
-	got, err := fdLister.ListFiscalDrives(ctx)
-	require.Error(t, err)
-	require.Nil(t, got)
-	assert.ErrorContains(t, err, "no card connected")
 }

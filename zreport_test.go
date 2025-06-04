@@ -14,311 +14,293 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestZreportOpenSuccess(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-
-	const factoryID = "12342131231223123123"
-	createdAtTime := "2025-05-31 12:04:00"
-	reqBody, err := json.Marshal(dateTime{DateTime: createdAtTime})
-	require.NoError(t, err)
-	req, err := httpclient.NewHTTPRequest(
-		"localhost:1234/FiscalDrive/ZReport/Open/"+factoryID,
-		http.MethodPost,
-		constants.ContentTypeUrlEncoded,
-		reqBody,
-		nil,
-	)
-	require.NoError(t, err)
-
-	httpClient.EXPECT().Request(gomock.Any(), req).
-		Return(&httpclient.HTTPResponse{
-			Body:       []byte("OK"),
-			StatusCode: 200,
-		}).Times(1)
-
-	gateway := gateway.New(gateway.Config{
-		ServiceAddress: "localhost:1234",
-		FactoryID:      factoryID,
-		HttpClient:     httpClient,
-	})
-	zReport := &zReport{
-		gateway: gateway,
-	}
-
-	err = zReport.OpenZreport(ctx, createdAtTime)
-	require.NoError(t, err)
-}
-
-func TestZreportOpenFailInvalidTime(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	const factoryID = "12342131231223123123"
-	createdAtTime := "2025-05-31T12:04:00"
-
-	gateway := gateway.New(gateway.Config{
-		ServiceAddress: "localhost:1234",
-		FactoryID:      factoryID,
-		HttpClient:     httpClient,
-	})
-	zReport := &zReport{
-		gateway: gateway,
-	}
-
-	err := zReport.OpenZreport(ctx, createdAtTime)
-	require.Error(t, err)
-	assert.ErrorContains(t, err, "invalid time format")
-}
-
-func TestZreportOpenFailExternal(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	const factoryID = "12342131231223123123"
-	createdAtTime := "2025-05-31 12:04:00"
-	reqBody, err := json.Marshal(dateTime{DateTime: createdAtTime})
-	require.NoError(t, err)
-	req, err := httpclient.NewHTTPRequest(
-		"localhost:1234/FiscalDrive/ZReport/Open/"+factoryID,
-		http.MethodPost,
-		constants.ContentTypeUrlEncoded,
-		reqBody,
-		nil,
-	)
-	require.NoError(t, err)
-
-	bodyResponse := errorResponse{
-		Reason: "no card found",
-		Type:   "errors.errorString",
-	}
-
-	body, err := json.Marshal(bodyResponse)
-	require.NoError(t, err)
-
-	httpClient.EXPECT().Request(gomock.Any(), req).
-		Return(&httpclient.HTTPResponse{
-			Body:       body,
-			StatusCode: 400,
-		}).Times(1)
-	gateway := gateway.New(gateway.Config{
-		ServiceAddress: "localhost:1234",
-		FactoryID:      factoryID,
-		HttpClient:     httpClient,
-	})
-	zReport := &zReport{
-		gateway: gateway,
-	}
-
-	err = zReport.OpenZreport(ctx, createdAtTime)
-	require.Error(t, err)
-	assert.ErrorContains(t, err, bodyResponse.Reason)
-}
-
-func TestZreportCloseSuccess(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-
-	const factoryID = "12342131231223123123"
-	createdAtTime := "2025-05-31 12:04:00"
-	reqBody, err := json.Marshal(dateTime{DateTime: createdAtTime})
-	require.NoError(t, err)
-	req, err := httpclient.NewHTTPRequest(
-		"localhost:1234/FiscalDrive/ZReport/Close/"+factoryID,
-		http.MethodPost,
-		constants.ContentTypeUrlEncoded,
-		reqBody,
-		nil,
-	)
-	require.NoError(t, err)
-
-	httpClient.EXPECT().Request(gomock.Any(), req).
-		Return(&httpclient.HTTPResponse{
-			Body:       []byte("OK"),
-			StatusCode: 200,
-		}).Times(1)
-
-	gateway := gateway.New(gateway.Config{
-		ServiceAddress: "localhost:1234",
-		FactoryID:      factoryID,
-		HttpClient:     httpClient,
-	})
-	zReport := &zReport{
-		gateway: gateway,
-	}
-
-	err = zReport.CloseZreport(ctx, createdAtTime)
-	require.NoError(t, err)
-}
-
-func TestZreportCloseFailInvalidTime(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	const factoryID = "12342131231223123123"
-	createdAtTime := "2025-05-31T12:04:00"
-	gateway := gateway.New(gateway.Config{
-		ServiceAddress: "localhost:1234",
-		FactoryID:      factoryID,
-		HttpClient:     httpClient,
-	})
-	zReport := &zReport{
-		gateway: gateway,
-	}
-
-	err := zReport.CloseZreport(ctx, createdAtTime)
-	require.Error(t, err)
-	assert.ErrorContains(t, err, "invalid time format")
-}
-
-func TestZReportCloseFailExternal(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	const factoryID = "12342131231223123123"
-	createdAtTime := "2025-05-31 12:04:00"
-	reqBody, err := json.Marshal(dateTime{DateTime: createdAtTime})
-	require.NoError(t, err)
-	req, err := httpclient.NewHTTPRequest(
-		"localhost:1234/FiscalDrive/ZReport/Close/"+factoryID,
-		http.MethodPost,
-		constants.ContentTypeUrlEncoded,
-		reqBody,
-		nil,
-	)
-	require.NoError(t, err)
-
-	bodyResponse := errorResponse{
-		Reason: "no card found",
-		Type:   "errors.errorString",
-	}
-
-	body, err := json.Marshal(bodyResponse)
-	require.NoError(t, err)
-	httpClient.EXPECT().Request(gomock.Any(), req).
-		Return(&httpclient.HTTPResponse{
-			Body:       body,
-			StatusCode: 400,
-		}).Times(1)
-	gateway := gateway.New(gateway.Config{
-		ServiceAddress: "localhost:1234",
-		FactoryID:      factoryID,
-		HttpClient:     httpClient,
-	})
-	zReport := &zReport{
-		gateway: gateway,
-	}
-
-	err = zReport.CloseZreport(ctx, createdAtTime)
-	require.Error(t, err)
-	assert.ErrorContains(t, err, bodyResponse.Reason)
-}
-
-func TestZReportInfoSuccess(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-
-	const factoryID = "12342131231223123123"
-
-	indexData := indexInfo{Index: 0}
-	indexBody, err := json.Marshal(indexData)
-	require.NoError(t, err)
-	req, err := httpclient.NewHTTPRequest(
-		"localhost:1234/FiscalDrive/ZReport/Info/"+factoryID,
-		http.MethodGet,
-		constants.ContentTypeUrlEncoded,
-		indexBody,
-		nil,
-	)
-	require.NoError(t, err)
-
-	expectedResponse := ZReportInfo{
-		OpenTime:         "2023-05-31 12:04:00",
-		CloseTime:        "2023-05-31 13:04:00",
-		TerminalID:       "TERM123",
-		TotalSaleCount:   10,
-		TotalRefundCount: 2,
-		TotalCash: TotalAmount{
-			Sale:   1000,
-			Refund: 12,
+func TestZreportOpen(t *testing.T) {
+	tests := []struct {
+		name          string
+		createdAtTime string
+		responseBody  interface{}
+		responseCode  int
+		expectedError string
+	}{
+		{
+			name:          "success",
+			createdAtTime: "2025-05-31 12:04:00",
+			responseBody:  "OK",
+			responseCode:  200,
+			expectedError: "",
 		},
-		TotalCard: TotalAmount{
-			Sale:   2000,
-			Refund: 11,
+		{
+			name:          "invalid time format",
+			createdAtTime: "2025-05-31T12:04:00",
+			responseBody:  nil,
+			responseCode:  0,
+			expectedError: "invalid time format",
 		},
-		TotalVAT: TotalAmount{
-			Sale:   100,
-			Refund: 12,
+		{
+			name:          "external error",
+			createdAtTime: "2025-05-31 12:04:00",
+			responseBody: errorResponse{
+				Reason: "no card found",
+				Type:   "errors.errorString",
+			},
+			responseCode:  400,
+			expectedError: "no card found",
 		},
-		FirstReceiptSeq: 1001,
-		LastReceiptSeq:  1012,
 	}
 
-	responseBody, err := json.Marshal(expectedResponse)
-	require.NoError(t, err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+			const factoryID = "12342131231223123123"
 
-	httpClient.EXPECT().Request(gomock.Any(), req).
-		Return(&httpclient.HTTPResponse{
-			Body:       responseBody,
-			StatusCode: 200,
-		}).Times(1)
+			gateway := gateway.New(gateway.Config{
+				ServiceAddress: "localhost:1234",
+				FactoryID:      factoryID,
+				HttpClient:     httpClient,
+			})
+			zReport := &zReport{
+				gateway: gateway,
+			}
 
-	gateway := gateway.New(gateway.Config{
-		ServiceAddress: "localhost:1234",
-		FactoryID:      factoryID,
-		HttpClient:     httpClient,
-	})
-	zReport := &zReport{
-		gateway: gateway,
+			if tt.responseBody != nil {
+				reqBody, err := json.Marshal(dateTime{DateTime: tt.createdAtTime})
+				require.NoError(t, err)
+				req, err := httpclient.NewHTTPRequest(
+					"localhost:1234/FiscalDrive/ZReport/Open/"+factoryID,
+					http.MethodPost,
+					constants.ContentTypeUrlEncoded,
+					reqBody,
+					nil,
+				)
+				require.NoError(t, err)
+
+				var responseBody []byte
+				responseBody, err = json.Marshal(tt.responseBody)
+				require.NoError(t, err)
+
+				httpClient.EXPECT().Request(gomock.Any(), req).
+					Return(&httpclient.HTTPResponse{
+						Body:       responseBody,
+						StatusCode: tt.responseCode,
+					}).Times(1)
+			}
+
+			err := zReport.OpenZreport(ctx, tt.createdAtTime)
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.ErrorContains(t, err, tt.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
-
-	info, err := zReport.GetZReportInfo(ctx, 0)
-	require.NoError(t, err)
-	assert.Equal(t, expectedResponse.OpenTime, info.OpenTime)
-	assert.Equal(t, expectedResponse.CloseTime, info.CloseTime)
-	assert.Equal(t, expectedResponse.TerminalID, info.TerminalID)
-	assert.Equal(t, expectedResponse.TotalSaleCount, info.TotalSaleCount)
-	assert.Equal(t, expectedResponse.TotalRefundCount, info.TotalRefundCount)
-	assert.Equal(t, expectedResponse.TotalCash, info.TotalCash)
-	assert.Equal(t, expectedResponse.TotalCard, info.TotalCard)
-	assert.Equal(t, expectedResponse.TotalVAT, info.TotalVAT)
-	assert.Equal(t, expectedResponse.FirstReceiptSeq, info.FirstReceiptSeq)
-	assert.Equal(t, expectedResponse.LastReceiptSeq, info.LastReceiptSeq)
 }
 
-func TestZReportFailExternal(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
-	const factoryID = "12342131231223123123"
-	indexData := indexInfo{Index: 0}
-	indexBody, err := json.Marshal(indexData)
-	require.NoError(t, err)
-	req, err := httpclient.NewHTTPRequest(
-		"localhost:1234/FiscalDrive/ZReport/Info/"+factoryID,
-		http.MethodGet,
-		constants.ContentTypeUrlEncoded,
-		indexBody,
-		nil,
-	)
-	require.NoError(t, err)
-	bodyResponse := errorResponse{
-		Reason: "no card found",
-		Type:   "errors.errorString",
+func TestZReportClose(t *testing.T) {
+	tests := []struct {
+		name          string
+		createdAtTime string
+		responseBody  interface{}
+		responseCode  int
+		expectedError string
+	}{
+		{
+			name:          "success",
+			createdAtTime: "2025-05-31 12:04:00",
+			responseBody:  "OK",
+			responseCode:  200,
+			expectedError: "",
+		},
+		{
+			name:          "invalid time format",
+			createdAtTime: "2025-05-31T12:04:00",
+			responseBody:  nil,
+			responseCode:  0,
+			expectedError: "invalid time format",
+		},
+		{
+			name:          "external error",
+			createdAtTime: "2025-05-31 12:04:00",
+			responseBody: errorResponse{
+				Reason: "no card found",
+				Type:   "errors.errorString",
+			},
+			responseCode:  400,
+			expectedError: "no card found",
+		},
 	}
 
-	body, err := json.Marshal(bodyResponse)
-	require.NoError(t, err)
-	httpClient.EXPECT().Request(gomock.Any(), req).
-		Return(&httpclient.HTTPResponse{
-			Body:       body,
-			StatusCode: 400,
-		}).Times(1)
-	gateway := gateway.New(gateway.Config{
-		ServiceAddress: "localhost:1234",
-		FactoryID:      factoryID,
-		HttpClient:     httpClient,
-	})
-	zReport := &zReport{
-		gateway: gateway,
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+			const factoryID = "12342131231223123123"
+
+			gateway := gateway.New(gateway.Config{
+				ServiceAddress: "localhost:1234",
+				FactoryID:      factoryID,
+				HttpClient:     httpClient,
+			})
+			zReport := &zReport{
+				gateway: gateway,
+			}
+
+			if tt.responseBody != nil {
+				reqBody, err := json.Marshal(dateTime{DateTime: tt.createdAtTime})
+				require.NoError(t, err)
+				req, err := httpclient.NewHTTPRequest(
+					"localhost:1234/FiscalDrive/ZReport/Close/"+factoryID,
+					http.MethodPost,
+					constants.ContentTypeUrlEncoded,
+					reqBody,
+					nil,
+				)
+				require.NoError(t, err)
+
+				var responseBody []byte
+				responseBody, err = json.Marshal(tt.responseBody)
+				require.NoError(t, err)
+
+				httpClient.EXPECT().Request(gomock.Any(), req).
+					Return(&httpclient.HTTPResponse{
+						Body:       responseBody,
+						StatusCode: tt.responseCode,
+					}).Times(1)
+			}
+
+			err := zReport.CloseZreport(ctx, tt.createdAtTime)
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.ErrorContains(t, err, tt.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+func TestZReportInfo(t *testing.T) {
+	tests := []struct {
+		name             string
+		responseBody     interface{}
+		responseStatus   int
+		expectedError    string
+		expectedResponse *ZReportInfo
+	}{
+		{
+			name: "success",
+			responseBody: ZReportInfo{
+				OpenTime:         "2023-05-31 12:04:00",
+				CloseTime:        "2023-05-31 13:04:00",
+				TerminalID:       "TERM123",
+				TotalSaleCount:   10,
+				TotalRefundCount: 2,
+				TotalCash: TotalAmount{
+					Sale:   1000,
+					Refund: 12,
+				},
+				TotalCard: TotalAmount{
+					Sale:   2000,
+					Refund: 11,
+				},
+				TotalVAT: TotalAmount{
+					Sale:   100,
+					Refund: 12,
+				},
+				FirstReceiptSeq: 1001,
+				LastReceiptSeq:  1012,
+			},
+			responseStatus: 200,
+			expectedError:  "",
+			expectedResponse: &ZReportInfo{
+				OpenTime:         "2023-05-31 12:04:00",
+				CloseTime:        "2023-05-31 13:04:00",
+				TerminalID:       "TERM123",
+				TotalSaleCount:   10,
+				TotalRefundCount: 2,
+				TotalCash: TotalAmount{
+					Sale:   1000,
+					Refund: 12,
+				},
+				TotalCard: TotalAmount{
+					Sale:   2000,
+					Refund: 11,
+				},
+				TotalVAT: TotalAmount{
+					Sale:   100,
+					Refund: 12,
+				},
+				FirstReceiptSeq: 1001,
+				LastReceiptSeq:  1012,
+			},
+		},
+		{
+			name: "external error",
+			responseBody: errorResponse{
+				Reason: "no card found",
+				Type:   "errors.errorString",
+			},
+			responseStatus:   400,
+			expectedError:    "no card found",
+			expectedResponse: nil,
+		},
 	}
 
-	_, err = zReport.GetZReportInfo(ctx, 0)
-	require.Error(t, err)
-	assert.ErrorContains(t, err, bodyResponse.Reason)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+
+			const factoryID = "12342131231223123123"
+			indexData := indexInfo{Index: 0}
+			indexBody, err := json.Marshal(indexData)
+			require.NoError(t, err)
+
+			req, err := httpclient.NewHTTPRequest(
+				"localhost:1234/FiscalDrive/ZReport/Info/"+factoryID,
+				http.MethodGet,
+				constants.ContentTypeUrlEncoded,
+				indexBody,
+				nil,
+			)
+			require.NoError(t, err)
+
+			responseBody, err := json.Marshal(tt.responseBody)
+			require.NoError(t, err)
+
+			httpClient.EXPECT().Request(gomock.Any(), req).
+				Return(&httpclient.HTTPResponse{
+					Body:       responseBody,
+					StatusCode: tt.responseStatus,
+				}).Times(1)
+
+			gateway := gateway.New(gateway.Config{
+				ServiceAddress: "localhost:1234",
+				FactoryID:      factoryID,
+				HttpClient:     httpClient,
+			})
+			zReport := &zReport{
+				gateway: gateway,
+			}
+
+			info, err := zReport.GetZReportInfo(ctx, 0)
+
+			if tt.expectedError != "" {
+				require.Error(t, err)
+				assert.ErrorContains(t, err, tt.expectedError)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expectedResponse.OpenTime, info.OpenTime)
+				assert.Equal(t, tt.expectedResponse.CloseTime, info.CloseTime)
+				assert.Equal(t, tt.expectedResponse.TerminalID, info.TerminalID)
+				assert.Equal(t, tt.expectedResponse.TotalSaleCount, info.TotalSaleCount)
+				assert.Equal(t, tt.expectedResponse.TotalRefundCount, info.TotalRefundCount)
+				assert.Equal(t, tt.expectedResponse.TotalCash, info.TotalCash)
+				assert.Equal(t, tt.expectedResponse.TotalCard, info.TotalCard)
+				assert.Equal(t, tt.expectedResponse.TotalVAT, info.TotalVAT)
+				assert.Equal(t, tt.expectedResponse.FirstReceiptSeq, info.FirstReceiptSeq)
+				assert.Equal(t, tt.expectedResponse.LastReceiptSeq, info.LastReceiptSeq)
+			}
+		})
+	}
 }
