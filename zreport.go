@@ -180,5 +180,6 @@ func (o zReport) GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo,
 	if err := json.Unmarshal(resp.Body, &zReportInfo); err != nil {
 		return ZReportInfo{}, fmt.Errorf("error unmarshalling response: %s", err.Error())
 	}
+	
 	return zReportInfo, nil
 }

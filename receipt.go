@@ -16,7 +16,7 @@ const (
 	receiptGetTXIDEndpoint      = "/FiscalDrive/Receipt/GetTXID/"
 
 	databaseFilesCountEndpoint = "/Database/Files/Count"
-	databaseFilesStatusReset  = "/DataBase/Files/Status/Reset"
+	databaseFilesStatusReset   = "/DataBase/Files/Status/Reset"
 )
 
 type ReceiptI interface {
@@ -177,9 +177,7 @@ func (r *receipt) GetTXID(ctx context.Context, params SaleParams) (int64, error)
 }
 
 func (r *receipt) RegisterTXID(ctx context.Context, txID int64) (ReceiptInfo, error) {
-
-	txIDInfo := txIDReq{TXID: txID}
-	reqBody, err := json.Marshal(txIDInfo)
+	reqBody, err := json.Marshal(txIDReq{TXID: txID})
 	if err != nil {
 		return ReceiptInfo{}, fmt.Errorf("error marshalling request body: %s", err.Error())
 	}
@@ -250,6 +248,7 @@ func (r *receipt) GetReceiptInfo(ctx context.Context, index uint32) (ReceiptFull
 	if err := json.Unmarshal(resp.Body, &receiptFullInfo); err != nil {
 		return ReceiptFullInfo{}, fmt.Errorf("error unmarshalling response: %s", err.Error())
 	}
+	
 	return receiptFullInfo, nil
 }
 
@@ -295,8 +294,7 @@ func (r *receipt) GetDatabaseFilesCount(ctx context.Context, status uint16) (map
 }
 
 func (r *receipt) ResetDatabaseFilesStatus(ctx context.Context, txID int64) error {
-	txIDInfo := txIDReq{TXID: txID}
-	reqBody, err := json.Marshal(txIDInfo)
+	reqBody, err := json.Marshal(txIDReq{TXID: txID})
 	if err != nil {
 		return fmt.Errorf("error marshalling request body: %s", err.Error())
 	}
