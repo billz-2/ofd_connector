@@ -65,7 +65,11 @@ func (o zReport) OpenZreport(ctx context.Context, createdTime string) error {
 	if createdTime != "now" {
 		validateErr := validators.ValidateTimeFormat(createdTime)
 		if validateErr != nil {
-			return fmt.Errorf("invalid time format, can be 'now' or in format %s, err: %w", constants.TimeFormat, validateErr)
+			return fmt.Errorf(
+				"invalid time format, can be 'now' or in format %s, err: %w",
+				constants.TimeFormat,
+				validateErr,
+			)
 		}
 	}
 
@@ -107,7 +111,11 @@ func (o zReport) CloseZreport(ctx context.Context, closedTime string) error {
 	if closedTime != "now" {
 		validateErr := validators.ValidateTimeFormat(closedTime)
 		if validateErr != nil {
-			return fmt.Errorf("invalid time format, can be 'now' or in format %s, err: %w", constants.TimeFormat, validateErr)
+			return fmt.Errorf(
+				"invalid time format, can be 'now' or in format %s, err: %w",
+				constants.TimeFormat,
+				validateErr,
+			)
 		}
 	}
 

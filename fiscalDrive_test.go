@@ -17,7 +17,13 @@ func TestListFiscalDrivesSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
-	req, err := httpclient.NewHTTPRequest("localhost:1234/FiscalDrive/List", http.MethodPost, constants.ContentTypeJSON, nil, nil)
+	req, err := httpclient.NewHTTPRequest(
+		"localhost:1234/FiscalDrive/List",
+		http.MethodPost,
+		constants.ContentTypeJSON,
+		nil,
+		nil,
+	)
 	require.NoError(t, err)
 
 	body, err := json.Marshal([]FiscalDriveReaderInfo{
@@ -63,7 +69,13 @@ func TestListFiscalDrives_Fail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
-	req, err := httpclient.NewHTTPRequest("localhost:1234/FiscalDrive/List", http.MethodPost, constants.ContentTypeJSON, nil, nil)
+	req, err := httpclient.NewHTTPRequest(
+		"localhost:1234/FiscalDrive/List",
+		http.MethodPost,
+		constants.ContentTypeJSON,
+		nil,
+		nil,
+	)
 	require.NoError(t, err)
 
 	body, err := json.Marshal(errorResponse{

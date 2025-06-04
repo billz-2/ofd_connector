@@ -111,7 +111,6 @@ func TestZreportOpenFailExternal(t *testing.T) {
 	err = zReport.OpenZreport(ctx, createdAtTime)
 	require.Error(t, err)
 	assert.ErrorContains(t, err, bodyResponse.Reason)
-
 }
 
 func TestZreportCloseSuccess(t *testing.T) {
@@ -281,7 +280,6 @@ func TestZReportInfoSuccess(t *testing.T) {
 	assert.Equal(t, expectedResponse.TotalVAT, info.TotalVAT)
 	assert.Equal(t, expectedResponse.FirstReceiptSeq, info.FirstReceiptSeq)
 	assert.Equal(t, expectedResponse.LastReceiptSeq, info.LastReceiptSeq)
-
 }
 
 func TestZReportFailExternal(t *testing.T) {

@@ -193,7 +193,6 @@ func TestRegisterTXIDSuccess(t *testing.T) {
 	assert.Equal(t, txIDRes.ReceiptSeq, receiptInfo.ReceiptSeq)
 	assert.Equal(t, txIDRes.FiscalSign, receiptInfo.FiscalSign)
 	assert.Equal(t, txIDRes.QRCodeURL, receiptInfo.QRCodeURL)
-
 }
 
 func TestRegisterTXIDFail(t *testing.T) {
@@ -345,7 +344,6 @@ func TestGetReceiptInfoFail(t *testing.T) {
 	_, err = receipt.GetReceiptInfo(ctx, index)
 	require.Error(t, err)
 	assert.ErrorContains(t, err, bodyResponse.Reason)
-
 }
 
 func TestGetDatabaseFilesCountSuccess(t *testing.T) {

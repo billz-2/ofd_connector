@@ -68,7 +68,7 @@ func (o fiscalDriveLister) ListFiscalDrives(ctx context.Context) ([]FiscalDriveR
 	}
 
 	resp := o.httpClient.Request(ctx, req)
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		errorResp := errorResponse{}
 		jsonErr := json.Unmarshal(resp.Body, &errorResp)
 		if jsonErr != nil {

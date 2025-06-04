@@ -248,7 +248,7 @@ func (r *receipt) GetReceiptInfo(ctx context.Context, index uint32) (ReceiptFull
 	if err := json.Unmarshal(resp.Body, &receiptFullInfo); err != nil {
 		return ReceiptFullInfo{}, fmt.Errorf("error unmarshalling response: %s", err.Error())
 	}
-	
+
 	return receiptFullInfo, nil
 }
 

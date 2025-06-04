@@ -7,7 +7,14 @@ import (
 )
 
 type GatewayI interface {
-	HTTPRequest(ctx context.Context, uri string, method string, contentType string, body []byte, headers map[string]string) (*httpclient.HTTPResponse, error)
+	HTTPRequest(
+		ctx context.Context,
+		uri string,
+		method string,
+		contentType string,
+		body []byte,
+		headers map[string]string,
+	) (*httpclient.HTTPResponse, error)
 	// FactoryEndpoint returns the endpoint for the given route with factoryID appended to the end
 	FactoryEndpoint(route string) string
 }
@@ -32,7 +39,14 @@ func New(config Config) gateway {
 	}
 }
 
-func (g gateway) HTTPRequest(ctx context.Context, uri string, method string, contentType string, body []byte, headers map[string]string) (*httpclient.HTTPResponse, error) {
+func (g gateway) HTTPRequest(
+	ctx context.Context,
+	uri string,
+	method string,
+	contentType string,
+	body []byte,
+	headers map[string]string,
+) (*httpclient.HTTPResponse, error) {
 	endpoint := g.serviceAddress + uri
 	request, err := httpclient.NewHTTPRequest(
 		endpoint,
