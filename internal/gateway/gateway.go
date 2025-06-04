@@ -6,7 +6,7 @@ import (
 	"github.com/billz-2/ofd_connector/internal/httpclient"
 )
 
-type GatewayI interface {
+type Client interface {
 	HTTPRequest(
 		ctx context.Context,
 		uri string,
@@ -31,7 +31,7 @@ type Config struct {
 	HttpClient     httpclient.HTTPClient
 }
 
-func New(config Config) gateway {
+func New(config Config) Client {
 	return gateway{
 		serviceAddress: config.ServiceAddress,
 		httpClient:     config.HttpClient,

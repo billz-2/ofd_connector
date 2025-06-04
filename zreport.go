@@ -24,12 +24,12 @@ type ZReportI interface {
 }
 
 type zReportConfig struct {
-	gateway gateway.GatewayI
+	gateway gateway.Client
 }
 
 // ofdConnector implements the OfdConnector interface
 type zReport struct {
-	gateway gateway.GatewayI
+	gateway gateway.Client
 }
 
 func newZReport(config zReportConfig) ZReportI {
