@@ -28,7 +28,7 @@ type ReceiptI interface {
 }
 
 type receiptConfig struct {
-	Gateway gateway.Client
+	gateway gateway.Client
 }
 
 // ofdConnector implements the OfdConnector interface
@@ -38,7 +38,7 @@ type receipt struct {
 
 func newReceipt(config receiptConfig) ReceiptI {
 	return &receipt{
-		gateway: config.Gateway,
+		gateway: config.gateway,
 	}
 }
 

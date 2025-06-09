@@ -44,7 +44,7 @@ func New(config OfdConnectorConfig) (OfdConnector, error) {
 		gateway: gateway,
 	})
 	receipt := newReceipt(receiptConfig{
-		Gateway: gateway,
+		gateway: gateway,
 	})
 
 	return &ofdConnector{
