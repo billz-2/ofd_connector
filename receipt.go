@@ -257,8 +257,7 @@ type statusData struct {
 }
 
 func (r *receipt) GetDatabaseFilesCount(ctx context.Context, status uint16) (map[string]int64, error) {
-	statusReq := statusData{Status: status}
-	bodyBytes, err := json.Marshal(statusReq)
+	bodyBytes, err := json.Marshal(statusData{Status: status})
 	if err != nil {
 		return nil, fmt.Errorf("error marshalling body: %s", err.Error())
 	}
