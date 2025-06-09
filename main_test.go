@@ -25,29 +25,45 @@ func TestMain(m *testing.M) {
 }
 
 func TestNew(t *testing.T) {
-	ofd, err := New(OfdConnectorConfigs{
-		ServiceAddress:        "localhost:1232",
-		RequestTimeOutSeconds: 10,
-	})
-	require.NoError(t, err)
-	assert.NotNil(t, ofd)
-}
+	tests := []struct {
+		name        string
+		config      OfdConnectorConfig
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name: "valid config",
+			config: OfdConnectorConfig{
+				ServiceAddress:        "localhost:1232",
+				RequestTimeOutSeconds: 10,
+				FactoryID:            "12342131231223123123",
+			},
+			expectError: false,
+		},
+		{
+			name: "invalid address",
+			config: OfdConnectorConfig{
+				ServiceAddress:        "",
+				RequestTimeOutSeconds: 10,
+				FactoryID:            "12342131231223123123",
+			},
+			expectError: true,
+			errorMsg:    "invalid url address",
+		},
+	}
 
-func TestNewInvalidAddress(t *testing.T) {
-	ofd, err := New(OfdConnectorConfigs{
-		ServiceAddress:        "",
-		RequestTimeOutSeconds: 10,
-	})
-	require.Error(t, err)
-	require.Nil(t, ofd)
-
-	assert.True(t, strings.Contains(err.Error(), "invalid url address"))
-}
-
-func TestSetFactoryID(t *testing.T) {
-	ofd := ofdConnector{"localhost:1232", nil, ""}
-	expectedID := "test123"
-
-	ofd.SetFactoryID(expectedID)
-	assert.Equal(t, expectedID, ofd.factoryID)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ofd, err := New(tt.config)
+			
+			if tt.expectError {
+				require.Error(t, err)
+				require.Nil(t, ofd)
+				assert.True(t, strings.Contains(err.Error(), tt.errorMsg))
+			} else {
+				require.NoError(t, err)
+				assert.NotNil(t, ofd)
+			}
+		})
+	}
 }

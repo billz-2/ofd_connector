@@ -8,7 +8,7 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/billz-2/ofd_connector/pkg/httpclient"
+	"github.com/billz-2/ofd_connector/internal/httpclient"
 )
 
 var (
@@ -26,12 +26,6 @@ func mySetupFunction() {
 	println("start httpclient package testing")
 
 	ctx = context.Background()
-
-	err := os.Setenv("ENV_FILE_PATH", "../../../configs/.env.testing")
-	if err != nil {
-		panic(err)
-	}
-
 }
 
 func myTeardownFunction() {
