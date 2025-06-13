@@ -36,7 +36,7 @@ func TestNew(t *testing.T) {
 			config: OfdConnectorConfig{
 				ServiceAddress:        "localhost:1232",
 				RequestTimeOutSeconds: 10,
-				FactoryID:            "12342131231223123123",
+				FactoryID:             "12342131231223123123",
 			},
 			expectError: false,
 		},
@@ -45,7 +45,7 @@ func TestNew(t *testing.T) {
 			config: OfdConnectorConfig{
 				ServiceAddress:        "",
 				RequestTimeOutSeconds: 10,
-				FactoryID:            "12342131231223123123",
+				FactoryID:             "12342131231223123123",
 			},
 			expectError: true,
 			errorMsg:    "invalid url address",
@@ -55,7 +55,7 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ofd, err := New(tt.config)
-			
+
 			if tt.expectError {
 				require.Error(t, err)
 				require.Nil(t, ofd)
