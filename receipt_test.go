@@ -149,7 +149,7 @@ func TestRegisterTXID(t *testing.T) {
 	const (
 		factoryID      = "12342131231223123123"
 		serviceAddress = "localhost:1234"
-		txID          = int64(2)
+		txID           = int64(2)
 	)
 
 	tests := []struct {
@@ -358,6 +358,7 @@ func TestGetReceiptInfo(t *testing.T) {
 		})
 	}
 }
+
 func TestGetDatabaseFilesCount(t *testing.T) {
 	const (
 		factoryID      = "12342131231223123123"

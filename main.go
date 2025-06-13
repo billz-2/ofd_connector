@@ -11,6 +11,7 @@ import (
 type OfdConnector interface {
 	ZReport() ZReportI
 	Receipt() ReceiptI
+	FiscalDrive() FiscalDriveI
 }
 
 type OfdConnectorConfig struct {
@@ -21,8 +22,9 @@ type OfdConnectorConfig struct {
 
 // ofdConnector implements the OfdConnector interface
 type ofdConnector struct {
-	zReport ZReportI
-	receipt ReceiptI
+	zReport     ZReportI
+	receipt     ReceiptI
+	fiscalDrive FiscalDriveI
 }
 
 // New creates a new instance of OfdConnector
@@ -46,17 +48,25 @@ func New(config OfdConnectorConfig) (OfdConnector, error) {
 	receipt := newReceipt(receiptConfig{
 		gateway: gateway,
 	})
+	fiscalDrive := newFiscalDrive(fiscalDriveConfig{
+		gateway: gateway,
+	})
 
 	return &ofdConnector{
-		zReport: zReport,
-		receipt: receipt,
+		zReport:     zReport,
+		receipt:     receipt,
+		fiscalDrive: fiscalDrive,
 	}, nil
 }
 
 func (o *ofdConnector) ZReport() ZReportI {
-	return o.ZReport()
+	return o.zReport
 }
 
 func (o *ofdConnector) Receipt() ReceiptI {
-	return o.Receipt()
+	return o.receipt
+}
+
+func (o *ofdConnector) FiscalDrive() FiscalDriveI {
+	return o.fiscalDrive
 }

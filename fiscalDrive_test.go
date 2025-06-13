@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/billz-2/ofd_connector/internal/constants"
+	"github.com/billz-2/ofd_connector/internal/gateway"
 	"github.com/billz-2/ofd_connector/internal/httpclient"
 	mock_httpclient "github.com/billz-2/ofd_connector/internal/httpclient/mock"
 	"github.com/stretchr/testify/assert"
@@ -13,54 +14,64 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestListFiscalDrives(t *testing.T) {
+func TestGetFiscalDrive(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	const (
+		factoryID      = "12342131231223123123"
+		serviceAddress = "localhost:1234"
+	)
+
 	tests := []struct {
 		name           string
-		responseBody   interface{}
+		responseBody   any
 		responseStatus int
-		expectedError  string
-		expectedDrives []FiscalDriveReaderInfo
+		expectError    bool
+		errorContains  string
+		expectedInfo   FiscalDriveInfo
 	}{
 		{
 			name: "success",
-			responseBody: []FiscalDriveReaderInfo{
-				{
-					FactoryID:     "12342131231223123123",
-					ReaderName:    "reader1",
-					ATR:           "1a8f800180318065b08503010101030201040105",
-					AppletVersion: "0400",
-				},
-				{
-					FactoryID:     "25123123123123123126",
-					ReaderName:    "reader2",
-					ATR:           "3b8f800180318065b08503010101030201040105",
-					AppletVersion: "0200",
+			responseBody: FiscalDriveInfo{
+				AppletVersion: "2.0.0",
+				TerminalID:    "TERM123",
+				SyncChallenge: "challenge123",
+				Locked:        false,
+				JCREVersion:   "3.0.4",
+				POSLocked:     false,
+				POSAuth:       true,
+				MemoryInfo: MemoryInfo{
+					AvailablePersistentMemory: 200,
+					AvailableResetMemory:      100,
+					AvailableDeselectMemory:   23,
 				},
 			},
-			responseStatus: 200,
-			expectedDrives: []FiscalDriveReaderInfo{
-				{
-					FactoryID:     "12342131231223123123",
-					ReaderName:    "reader1",
-					ATR:           "1a8f800180318065b08503010101030201040105",
-					AppletVersion: "0400",
-				},
-				{
-					FactoryID:     "25123123123123123126",
-					ReaderName:    "reader2",
-					ATR:           "3b8f800180318065b08503010101030201040105",
-					AppletVersion: "0200",
+			responseStatus: http.StatusOK,
+			expectError:    false,
+			expectedInfo: FiscalDriveInfo{
+				AppletVersion: "2.0.0",
+				TerminalID:    "TERM123",
+				SyncChallenge: "challenge123",
+				Locked:        false,
+				JCREVersion:   "3.0.4",
+				POSLocked:     false,
+				POSAuth:       true,
+				MemoryInfo: MemoryInfo{
+					AvailablePersistentMemory: 200,
+					AvailableResetMemory:      100,
+					AvailableDeselectMemory:   23,
 				},
 			},
 		},
 		{
 			name: "failure",
 			responseBody: errorResponse{
-				Reason: "no card connected",
+				Reason: "fiscal drive not found",
 				Type:   "errors.errorString",
 			},
-			responseStatus: 400,
-			expectedError: "no card connected",
+			responseStatus: http.StatusNotFound,
+			expectError:    true,
+			errorContains:  "fiscal drive not found",
 		},
 	}
 
@@ -70,37 +81,48 @@ func TestListFiscalDrives(t *testing.T) {
 			httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
 			req, err := httpclient.NewHTTPRequest(
-				"localhost:1234/FiscalDrive/List",
-				http.MethodPost,
+				serviceAddress+"/FiscalDrive/Info/"+factoryID,
+				http.MethodGet,
 				constants.ContentTypeJSON,
 				nil,
 				nil,
 			)
 			require.NoError(t, err)
 
-			body, err := json.Marshal(tt.responseBody)
+			responseBody, err := json.Marshal(tt.responseBody)
 			require.NoError(t, err)
+
 			httpClient.EXPECT().Request(gomock.Any(), req).
 				Return(&httpclient.HTTPResponse{
-					Body:       body,
+					Body:       responseBody,
 					StatusCode: tt.responseStatus,
 				}).Times(1)
 
-			fdLister := &fiscalDriveLister{
-				httpClient:     httpClient,
-				serviceAddress: "localhost:1234",
+			gateway := gateway.New(gateway.Config{
+				HttpClient:     httpClient,
+				ServiceAddress: serviceAddress,
+				FactoryID:      factoryID,
+			})
+			fiscalDrive := &fiscalDrive{
+				gateway: gateway,
 			}
 
-			got, err := fdLister.ListFiscalDrives(ctx)
-
-			if tt.expectedError != "" {
+			info, err := fiscalDrive.FiscalDriveInfo(ctx)
+			if tt.expectError {
 				require.Error(t, err)
-				assert.ErrorContains(t, err, tt.expectedError)
-				assert.Nil(t, got)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tt.expectedDrives, got)
+				assert.ErrorContains(t, err, tt.errorContains)
+				return
 			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.expectedInfo.AppletVersion, info.AppletVersion)
+			assert.Equal(t, tt.expectedInfo.TerminalID, info.TerminalID)
+			assert.Equal(t, tt.expectedInfo.SyncChallenge, info.SyncChallenge)
+			assert.Equal(t, tt.expectedInfo.Locked, info.Locked)
+			assert.Equal(t, tt.expectedInfo.JCREVersion, info.JCREVersion)
+			assert.Equal(t, tt.expectedInfo.POSLocked, info.POSLocked)
+			assert.Equal(t, tt.expectedInfo.POSAuth, info.POSAuth)
+			assert.Equal(t, tt.expectedInfo.MemoryInfo, info.MemoryInfo)
 		})
 	}
 }

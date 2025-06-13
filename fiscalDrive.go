@@ -7,81 +7,79 @@ import (
 	"net/http"
 
 	"github.com/billz-2/ofd_connector/internal/constants"
-	"github.com/billz-2/ofd_connector/internal/httpclient"
+	"github.com/billz-2/ofd_connector/internal/gateway"
 )
 
 const (
-	fiscalDriveListEndpoint = "/FiscalDrive/List"
+	fiscalDriveInfoEndpoint = "/FiscalDrive/Info/"
 )
 
-type FiscalDriveReaderInfo struct {
-	ReaderName    string `json:"ReaderName"`
-	ATR           string `json:"ATR"`
-	Description   string `json:"Description"`
-	FactoryID     string `json:"FactoryID"`
-	AppletVersion string `json:"AppletVersion"`
+type FiscalDriveI interface {
+	FiscalDriveInfo(ctx context.Context) (FiscalDriveInfo, error)
 }
 
-type errorResponse struct {
-	Reason string `json:"Reason"`
-	Type   string `json:"Type"`
-}
-
-type FiscalDriveLister interface {
-	ListFiscalDrives(context.Context) ([]FiscalDriveReaderInfo, error)
+type fiscalDriveConfig struct {
+	gateway gateway.Client
 }
 
 // ofdConnector implements the OfdConnector interface
-type fiscalDriveLister struct {
-	serviceAddress string
-	httpClient     httpclient.HTTPClient
+type fiscalDrive struct {
+	gateway gateway.Client
 }
 
-// NewFiscalDriveLister returns FiscalDriveLister that lists available fiscal drive readers in the system
-func NewFiscalDriveLister(config OfdConnectorConfig) (FiscalDriveLister, error) {
-	if config.ServiceAddress == "" {
-		return nil, fmt.Errorf("invalid url address")
+func newFiscalDrive(config fiscalDriveConfig) FiscalDriveI {
+	return &fiscalDrive{
+		gateway: config.gateway,
 	}
-
-	httpClient := httpclient.NewHTTPClient(
-		config.RequestTimeOutSeconds,
-	)
-
-	return &fiscalDriveLister{
-		serviceAddress: config.ServiceAddress,
-		httpClient:     httpClient,
-	}, nil
 }
 
-// ListFiscalDrives returns list of fiscal drive readers
-func (o fiscalDriveLister) ListFiscalDrives(ctx context.Context) ([]FiscalDriveReaderInfo, error) {
-	// Implementation for /FiscalDrive/List endpoint
-	req, err := httpclient.NewHTTPRequest(
-		o.serviceAddress+fiscalDriveListEndpoint,
-		http.MethodPost,
+type MemoryInfo struct {
+	AvailablePersistentMemory int64 `json:"AvailablePersistentMemory"`
+	AvailableResetMemory      int64 `json:"AvailableResetMemory"`
+	AvailableDeselectMemory   int64 `json:"AvailableDeselectMemory"`
+}
+
+type FiscalDriveInfo struct {
+	AppletVersion string     `json:"AppletVersion"`
+	TerminalID    string     `json:"TerminalID"`
+	SyncChallenge string     `json:"SyncChallenge"`
+	Locked        bool       `json:"Locked"`
+	JCREVersion   string     `json:"JCREVersion"`
+	POSLocked     bool       `json:"POSLocked"`
+	POSAuth       bool       `json:"POSAuth"`
+	MemoryInfo    MemoryInfo `json:"MemoryInfo"`
+}
+
+func (f *fiscalDrive) FiscalDriveInfo(ctx context.Context) (FiscalDriveInfo, error) {
+	endpoint := f.gateway.FactoryEndpoint(fiscalDriveInfoEndpoint)
+	resp, err := f.gateway.HTTPRequest(
+		ctx,
+		endpoint,
+		http.MethodGet,
 		constants.ContentTypeJSON,
 		nil,
 		nil,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %s", err.Error()) // TODO: Add error code
+		return FiscalDriveInfo{}, fmt.Errorf("error creating request: %s", err.Error())
 	}
 
-	resp := o.httpClient.Request(ctx, req)
 	if resp.StatusCode != http.StatusOK {
 		errorResp := errorResponse{}
-		jsonErr := json.Unmarshal(resp.Body, &errorResp)
-		if jsonErr != nil {
-			return nil, fmt.Errorf("error unmarshalling body: %s", resp.Body) // TODO: Add error code
+		if err := json.Unmarshal(resp.Body, &errorResp); err != nil {
+			return FiscalDriveInfo{}, fmt.Errorf("error unmarshalling error response: %s responseBody: %s",
+				err.Error(),
+				string(resp.Body),
+			)
 		}
-		return nil, fmt.Errorf("error: %s", errorResp.Reason)
+
+		return FiscalDriveInfo{}, fmt.Errorf("failed to get fiscal drive info: %s", errorResp.Reason)
 	}
 
-	var result []FiscalDriveReaderInfo
-	err = json.Unmarshal(resp.Body, &result)
-	if err != nil {
-		return nil, err
+	fiscalDriveInfo := FiscalDriveInfo{}
+	if err := json.Unmarshal(resp.Body, &fiscalDriveInfo); err != nil {
+		return FiscalDriveInfo{}, fmt.Errorf("error unmarshalling response: %s", err.Error())
 	}
 
-	return result, nil
+	return fiscalDriveInfo, nil
 }
