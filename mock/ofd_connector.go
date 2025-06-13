@@ -40,6 +40,20 @@ func (m *MockOfdConnector) EXPECT() *MockOfdConnectorMockRecorder {
 	return m.recorder
 }
 
+// FiscalDrive mocks base method.
+func (m *MockOfdConnector) FiscalDrive() ofdconnector.FiscalDriveI {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FiscalDrive")
+	ret0, _ := ret[0].(ofdconnector.FiscalDriveI)
+	return ret0
+}
+
+// FiscalDrive indicates an expected call of FiscalDrive.
+func (mr *MockOfdConnectorMockRecorder) FiscalDrive() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FiscalDrive", reflect.TypeOf((*MockOfdConnector)(nil).FiscalDrive))
+}
+
 // Receipt mocks base method.
 func (m *MockOfdConnector) Receipt() ofdconnector.ReceiptI {
 	m.ctrl.T.Helper()
