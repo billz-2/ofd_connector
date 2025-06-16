@@ -55,7 +55,7 @@ func (f *fiscalDrive) FiscalDriveInfo(ctx context.Context) (FiscalDriveInfo, err
 	resp, err := f.gateway.HTTPRequest(
 		ctx,
 		endpoint,
-		http.MethodGet,
+		http.MethodPost,
 		constants.ContentTypeJSON,
 		nil,
 		nil,

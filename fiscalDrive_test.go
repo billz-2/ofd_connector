@@ -82,7 +82,7 @@ func TestGetFiscalDrive(t *testing.T) {
 
 			req, err := httpclient.NewHTTPRequest(
 				serviceAddress+"/FiscalDrive/Info/"+factoryID,
-				http.MethodGet,
+				http.MethodPost,
 				constants.ContentTypeJSON,
 				nil,
 				nil,
