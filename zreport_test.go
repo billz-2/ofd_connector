@@ -304,3 +304,105 @@ func TestZReportInfo(t *testing.T) {
 		})
 	}
 }
+
+func TestSyncZReport(t *testing.T) {
+	const (
+		factoryID      = "12342131231223123123"
+		serviceAddress = "localhost:1234"
+	)
+	tests := []struct {
+		name           string
+		itemsCount     uint16
+		responseBody   any
+		responseStatus int
+		expectError    bool
+		errorContains  string
+		mockFunc       func(httpClient *mock_httpclient.MockHTTPClient, req *httpclient.HTTPRequest, response any, responseStatus int)
+	}{
+		{
+			name:           "success",
+			itemsCount:     uint16(2),
+			responseBody:   nil,
+			responseStatus: http.StatusOK,
+			expectError:    false,
+			mockFunc: func(httpClient *mock_httpclient.MockHTTPClient, req *httpclient.HTTPRequest, response any, responseStatus int) {
+				responseBody, err := json.Marshal(response)
+				require.NoError(t, err)
+				httpClient.EXPECT().Request(gomock.Any(), req).
+					Return(&httpclient.HTTPResponse{
+						Body:       responseBody,
+						StatusCode: responseStatus,
+					}).Times(1)
+			},
+		},
+		{
+			name:          "fail itemsCount validation: high value",
+			itemsCount:    uint16(33),
+			expectError:   true,
+			errorContains: "itemsCount must be in range [1, 32]",
+		},
+		{
+			name:          "fail itemsCount validation: zero value",
+			itemsCount:    uint16(0),
+			expectError:   true,
+			errorContains: "itemsCount must be in range [1, 32]",
+		},
+		{
+			name:       "failure",
+			itemsCount: uint16(2),
+			responseBody: errorResponse{
+				Reason: "internal error",
+				Type:   "errors.errorString",
+			},
+			responseStatus: http.StatusInternalServerError,
+			expectError:    true,
+			errorContains:  "internal error",
+			mockFunc: func(httpClient *mock_httpclient.MockHTTPClient, req *httpclient.HTTPRequest, response any, responseStatus int) {
+				responseBody, err := json.Marshal(response)
+				require.NoError(t, err)
+				httpClient.EXPECT().Request(gomock.Any(), req).
+					Return(&httpclient.HTTPResponse{
+						Body:       responseBody,
+						StatusCode: responseStatus,
+					}).Times(1)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
+			reqBody, err := json.Marshal(itemsCountReq{ItemsCount: tt.itemsCount})
+			require.NoError(t, err)
+			req, err := httpclient.NewHTTPRequest(
+				serviceAddress+zReportSyncEndpoint+factoryID,
+				http.MethodPost,
+				constants.ContentTypeUrlEncoded,
+				reqBody,
+				nil,
+			)
+			require.NoError(t, err)
+
+			if tt.mockFunc != nil {
+				tt.mockFunc(httpClient, req, tt.responseBody, tt.responseStatus)
+			}
+
+			gateway := gateway.New(gateway.Config{
+				HttpClient:     httpClient,
+				ServiceAddress: serviceAddress,
+				FactoryID:      factoryID,
+			})
+			zReport := &zReport{
+				gateway: gateway,
+			}
+			err = zReport.SyncZReports(ctx, tt.itemsCount)
+			if tt.expectError {
+				require.Error(t, err)
+				assert.ErrorContains(t, err, tt.errorContains)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
