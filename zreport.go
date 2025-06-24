@@ -3,24 +3,28 @@ package ofdconnector
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/billz-2/ofd_connector/internal/constants"
 	"github.com/billz-2/ofd_connector/internal/gateway"
 	"github.com/billz-2/ofd_connector/internal/validators"
+	"github.com/go-playground/validator/v10"
 )
 
 const (
 	zReportCloseEndpoint = "/FiscalDrive/ZReport/Close/"
 	zReportInfoEndpoint  = "/FiscalDrive/ZReport/Info/"
 	zReportOpenEndpoint  = "/FiscalDrive/ZReport/Open/"
+	zReportSyncEndpoint  = "/DataBase/Files/Sync/ZReports/"
 )
 
 type ZReportI interface {
 	OpenZreport(ctx context.Context, createdTime string) error
 	CloseZreport(ctx context.Context, closedTime string) error
 	GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo, error)
+	SyncZReports(ctx context.Context, itemsCount uint16) error
 }
 
 type zReportConfig struct {
@@ -190,4 +194,46 @@ func (o zReport) GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo,
 	}
 
 	return zReportInfo, nil
+}
+
+func (o zReport) SyncZReports(ctx context.Context, itemsCount uint16) error {
+	req := itemsCountReq{
+		ItemsCount: itemsCount,
+	}
+	validate := validator.New()
+	err := validate.Struct(req)
+	if err != nil {
+		return errors.New("itemsCount must be in range [1, 32]")
+	}
+
+	bodyBytes, err := json.Marshal(req)
+	if err != nil {
+		return fmt.Errorf("error marshalling body: %s", err.Error())
+	}
+
+	endpoint := o.gateway.FactoryEndpoint(zReportSyncEndpoint)
+	resp, err := o.gateway.HTTPRequest(
+		ctx,
+		endpoint,
+		http.MethodPost,
+		constants.ContentTypeUrlEncoded,
+		bodyBytes,
+		nil,
+	)
+	if err != nil {
+		return fmt.Errorf("error creating request: %s", err.Error())
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		errorResp := errorResponse{}
+		if err := json.Unmarshal(resp.Body, &errorResp); err != nil {
+			return fmt.Errorf("error unmarshalling error response: %s responseBody: %s",
+				err.Error(),
+				string(resp.Body),
+			)
+		}
+		return fmt.Errorf("failed to sync Z reports: %s", errorResp.Reason)
+	}
+
+	return nil
 }

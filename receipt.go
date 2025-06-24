@@ -345,7 +345,6 @@ func (r *receipt) SyncReceipts(ctx context.Context, itemsCount uint16) error {
 	}
 
 	endpoint := r.gateway.FactoryEndpoint(receiptSyncEndpoint)
-
 	resp, err := r.gateway.HTTPRequest(
 		ctx,
 		endpoint,
