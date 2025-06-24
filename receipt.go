@@ -3,17 +3,20 @@ package ofdconnector
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/billz-2/ofd_connector/internal/constants"
 	"github.com/billz-2/ofd_connector/internal/gateway"
+	"github.com/go-playground/validator/v10"
 )
 
 const (
 	receiptInfoEndpoint         = "/FiscalDrive/Receipt/Info/"
 	receiptRegisterTXIDEndpoint = "/FiscalDrive/Receipt/RegisterTXID/"
 	receiptGetTXIDEndpoint      = "/FiscalDrive/Receipt/GetTXID/"
+	receiptSyncEndpoint         = "/DataBase/Files/Sync/FullReceipts/"
 
 	databaseFilesCountEndpoint = "/Database/Files/Count"
 	databaseFilesStatusReset   = "/DataBase/Files/Status/Reset"
@@ -25,6 +28,7 @@ type ReceiptI interface {
 	GetReceiptInfo(ctx context.Context, index uint32) (ReceiptFullInfo, error)
 	GetDatabaseFilesCount(ctx context.Context, status uint16) (map[string]int64, error)
 	ResetDatabaseFilesStatus(ctx context.Context, txID int64) error
+	SyncReceipts(ctx context.Context, itemsCount uint16) error
 }
 
 type receiptConfig struct {
@@ -132,6 +136,10 @@ type TotalAmount struct {
 
 type txIDReq struct {
 	TXID int64 `json:"TXID"`
+}
+
+type itemsCountReq struct {
+	ItemsCount uint16 `json:"ItemsCount" validate:"gt=0,lte=32"` // не более 32
 }
 
 // GetTXID returns the txID for a sale
@@ -318,6 +326,47 @@ func (r *receipt) ResetDatabaseFilesStatus(ctx context.Context, txID int64) erro
 			)
 		}
 		return fmt.Errorf("failed to register txID: %s", errorResp.Reason)
+	}
+
+	return nil
+}
+
+func (r *receipt) SyncReceipts(ctx context.Context, itemsCount uint16) error {
+	req := itemsCountReq{ItemsCount: itemsCount}
+	validate := validator.New()
+	err := validate.Struct(req)
+	if err != nil {
+		return errors.New("itemsCount must be in range [1, 32]")
+	}
+
+	reqBody, err := json.Marshal(req)
+	if err != nil {
+		return fmt.Errorf("error marshalling request body: %s", err.Error())
+	}
+
+	endpoint := r.gateway.FactoryEndpoint(receiptSyncEndpoint)
+
+	resp, err := r.gateway.HTTPRequest(
+		ctx,
+		endpoint,
+		http.MethodPost,
+		constants.ContentTypeUrlEncoded,
+		reqBody,
+		nil,
+	)
+	if err != nil {
+		return fmt.Errorf("error creating request: %s", err.Error())
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		errorResp := errorResponse{}
+		if err = json.Unmarshal(resp.Body, &errorResp); err != nil {
+			return fmt.Errorf("error unmarshalling error response: %s responseBody: %s",
+				err.Error(),
+				string(resp.Body),
+			)
+		}
+		return fmt.Errorf("failed to sync receipts: %s", errorResp.Reason)
 	}
 
 	return nil
