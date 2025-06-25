@@ -114,3 +114,17 @@ func (mr *MockReceiptIMockRecorder) ResetDatabaseFilesStatus(ctx, txID any) *gom
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResetDatabaseFilesStatus", reflect.TypeOf((*MockReceiptI)(nil).ResetDatabaseFilesStatus), ctx, txID)
 }
+
+// SyncReceipts mocks base method.
+func (m *MockReceiptI) SyncReceipts(ctx context.Context, itemsCount uint16) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SyncReceipts", ctx, itemsCount)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SyncReceipts indicates an expected call of SyncReceipts.
+func (mr *MockReceiptIMockRecorder) SyncReceipts(ctx, itemsCount any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SyncReceipts", reflect.TypeOf((*MockReceiptI)(nil).SyncReceipts), ctx, itemsCount)
+}
