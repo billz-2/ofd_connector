@@ -83,3 +83,17 @@ func (mr *MockZReportIMockRecorder) OpenZreport(ctx, createdTime any) *gomock.Ca
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OpenZreport", reflect.TypeOf((*MockZReportI)(nil).OpenZreport), ctx, createdTime)
 }
+
+// SyncZReports mocks base method.
+func (m *MockZReportI) SyncZReports(ctx context.Context, itemsCount uint16) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SyncZReports", ctx, itemsCount)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SyncZReports indicates an expected call of SyncZReports.
+func (mr *MockZReportIMockRecorder) SyncZReports(ctx, itemsCount any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SyncZReports", reflect.TypeOf((*MockZReportI)(nil).SyncZReports), ctx, itemsCount)
+}
