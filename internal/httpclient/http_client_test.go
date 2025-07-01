@@ -2,7 +2,9 @@ package httpclient_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
+	"net/url"
 	"os"
 	"testing"
 
@@ -46,4 +48,27 @@ func TestHTTPClient(t *testing.T) {
 		So(resp.Body, ShouldNotBeEmpty)
 		So(resp.StatusCode, ShouldEqual, http.StatusOK)
 	})
+}
+
+func TestHttpReqUrlEncoded(t *testing.T) {
+	Convey("TestHttpReqUrlEncoded", t, func() {
+		bodyValues := map[string]any{
+			"a": 1,
+			"b": 2,
+		}
+		bodyBytes, err := json.Marshal(bodyValues)
+		So(err, ShouldBeNil)
+		req, err := httpclient.NewHTTPRequest("https://jsonplaceholder.typicode.com/todos/1",
+			http.MethodGet, "application/x-www-form-urlencoded", bodyBytes, nil)
+		So(err, ShouldBeNil)
+		So(req.ContentType, ShouldEqual, "application/x-www-form-urlencoded")
+		So(req.Body, ShouldNotBeEmpty)
+		Convey("TestHttpReqUrlEncoded", func() {
+			urlValues, err := url.ParseQuery(string(req.Body))
+			So(err, ShouldBeNil)
+			So(urlValues.Get("a"), ShouldEqual, "1")
+			So(urlValues.Get("b"), ShouldEqual, "2")
+		})
+	})
+
 }

@@ -3,10 +3,12 @@ package httpclient
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -104,6 +106,22 @@ func NewHTTPRequest(uri, method, contentType string, body []byte, headers map[st
 	}
 	if contentType == "" {
 		contentType = "application/json"
+	}
+
+	if contentType == "application/x-www-form-urlencoded" && len(body) > 0 {
+		// For URL encoded content type, ensure body is properly formatted
+		bodyValues := map[string]any{}
+		err := json.Unmarshal(body, &bodyValues)
+		if err != nil {
+			return nil, err
+		}
+
+		// Convert body to url encoded format
+		formUrlValues := url.Values{}
+		for k, v := range bodyValues {
+			formUrlValues.Add(k, fmt.Sprintf("%v", v))
+		}
+		body = []byte(formUrlValues.Encode())
 	}
 
 	return &HTTPRequest{
