@@ -71,7 +71,7 @@ func TestGetTXID(t *testing.T) {
 				Operation:    0,
 				ReceivedCard: 10000,
 				ReceivedCash: 0,
-				RefundInfo: RefundInfo{
+				RefundInfo: &RefundInfo{
 					TerminalID: "1234567890",
 					ReceiptSeq: 12,
 					DateTime:   "2023-01-01 00:00:00",
