@@ -55,7 +55,7 @@ type SaleParams struct {
 	Operation    int         `json:"Operation"`
 	Location     Location    `json:"Location"`
 	Items        []Item      `json:"Items"`
-	ExtraInfo    ExtraInfo   `json:"ExtraInfo"`
+	ExtraInfo    *ExtraInfo  `json:"ExtraInfo,omitempty"`
 	RefundInfo   *RefundInfo `json:"RefundInfo,omitempty"`
 }
 

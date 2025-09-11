@@ -32,7 +32,7 @@ func TestGetTXID(t *testing.T) {
 		{
 			name: "success",
 			saleParams: SaleParams{
-				ExtraInfo: ExtraInfo{
+				ExtraInfo: &ExtraInfo{
 					CarNumber:         "АА000АА",
 					CardType:          1,
 					CashedOutFromCard: 10542,
