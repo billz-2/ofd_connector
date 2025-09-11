@@ -48,15 +48,15 @@ func newReceipt(config receiptConfig) ReceiptI {
 
 // SaleParams represents the parameters for a sale operation
 type SaleParams struct {
-	ReceivedCash int64      `json:"ReceivedCash"`
-	ReceivedCard int64      `json:"ReceivedCard"`
-	Time         string     `json:"Time"`
-	Type         int        `json:"Type"`
-	Operation    int        `json:"Operation"`
-	Location     Location   `json:"Location"`
-	Items        []Item     `json:"Items"`
-	ExtraInfo    ExtraInfo  `json:"ExtraInfo"`
-	RefundInfo   RefundInfo `json:"RefundInfo"`
+	ReceivedCash int64       `json:"ReceivedCash"`
+	ReceivedCard int64       `json:"ReceivedCard"`
+	Time         string      `json:"Time"`
+	Type         int         `json:"Type"`
+	Operation    int         `json:"Operation"`
+	Location     Location    `json:"Location"`
+	Items        []Item      `json:"Items"`
+	ExtraInfo    ExtraInfo   `json:"ExtraInfo"`
+	RefundInfo   *RefundInfo `json:"RefundInfo,omitempty"`
 }
 
 type RefundInfo struct {
