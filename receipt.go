@@ -50,6 +50,7 @@ func newReceipt(config receiptConfig) ReceiptI {
 type SaleParams struct {
 	ReceivedCash int64       `json:"ReceivedCash"`
 	ReceivedCard int64       `json:"ReceivedCard"`
+	IsRefund     int32       `json:"IsRefund"` // 0 - sale, 1 - refund
 	Time         string      `json:"Time"`
 	Type         int         `json:"Type"`
 	Operation    int         `json:"Operation"`
