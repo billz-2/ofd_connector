@@ -179,16 +179,25 @@ func TestZReportClose(t *testing.T) {
 		})
 	}
 }
-func TestZReportInfo(t *testing.T) {
+func TestCurrentZReportInfo(t *testing.T) {
+	const (
+		factoryID     = "12342131231223123123"
+		zReportsCount = uint32(5)
+	)
+
 	tests := []struct {
-		name             string
-		responseBody     interface{}
-		responseStatus   int
-		expectedError    string
-		expectedResponse *ZReportInfo
+		name               string
+		fiscalMemoryStatus int
+		fiscalMemoryBody   interface{}
+		responseBody       interface{}
+		responseStatus     int
+		expectedError      string
+		expectedResponse   *ZReportInfo
 	}{
 		{
-			name: "success",
+			name:               "success",
+			fiscalMemoryStatus: 200,
+			fiscalMemoryBody:   fiscalMemoryInfoResp{ZReportsCount: zReportsCount},
 			responseBody: ZReportInfo{
 				OpenTime:         "2023-05-31 12:04:00",
 				CloseTime:        "2023-05-31 13:04:00",
@@ -215,6 +224,7 @@ func TestZReportInfo(t *testing.T) {
 			expectedResponse: &ZReportInfo{
 				OpenTime:         "2023-05-31 12:04:00",
 				CloseTime:        "2023-05-31 13:04:00",
+				ZReportIndex:     zReportsCount - 1,
 				TerminalID:       "TERM123",
 				TotalSaleCount:   10,
 				TotalRefundCount: 2,
@@ -235,7 +245,19 @@ func TestZReportInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "external error",
+			name:               "fiscal memory error",
+			fiscalMemoryStatus: 400,
+			fiscalMemoryBody: errorResponse{
+				Reason: "fiscal memory unavailable",
+				Type:   "errors.errorString",
+			},
+			expectedError:    "fiscal memory unavailable",
+			expectedResponse: nil,
+		},
+		{
+			name:               "external error",
+			fiscalMemoryStatus: 200,
+			fiscalMemoryBody:   fiscalMemoryInfoResp{ZReportsCount: zReportsCount},
 			responseBody: errorResponse{
 				Reason: "no card found",
 				Type:   "errors.errorString",
@@ -251,39 +273,57 @@ func TestZReportInfo(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
-			const factoryID = "12342131231223123123"
-			indexData := indexInfo{Index: 0}
-			indexBody, err := json.Marshal(indexData)
-			require.NoError(t, err)
-
-			req, err := httpclient.NewHTTPRequest(
-				"localhost:1234/FiscalDrive/ZReport/Info/"+factoryID,
+			fiscalMemoryReq, err := httpclient.NewHTTPRequest(
+				"localhost:1234/FiscalDrive/FiscalMemory/Info/"+factoryID,
 				http.MethodGet,
-				constants.ContentTypeUrlEncoded,
-				indexBody,
+				constants.ContentTypeJSON,
+				nil,
 				nil,
 			)
 			require.NoError(t, err)
 
-			responseBody, err := json.Marshal(tt.responseBody)
+			fiscalMemoryBody, err := json.Marshal(tt.fiscalMemoryBody)
 			require.NoError(t, err)
 
-			httpClient.EXPECT().Request(gomock.Any(), req).
+			httpClient.EXPECT().Request(gomock.Any(), fiscalMemoryReq).
 				Return(&httpclient.HTTPResponse{
-					Body:       responseBody,
-					StatusCode: tt.responseStatus,
+					Body:       fiscalMemoryBody,
+					StatusCode: tt.fiscalMemoryStatus,
 				}).Times(1)
 
-			gateway := gateway.New(gateway.Config{
+			if tt.fiscalMemoryStatus == http.StatusOK {
+				indexBody, err := json.Marshal(indexInfo{Index: zReportsCount - 1})
+				require.NoError(t, err)
+
+				req, err := httpclient.NewHTTPRequest(
+					"localhost:1234/FiscalDrive/ZReport/Info/"+factoryID,
+					http.MethodGet,
+					constants.ContentTypeUrlEncoded,
+					indexBody,
+					nil,
+				)
+				require.NoError(t, err)
+
+				responseBody, err := json.Marshal(tt.responseBody)
+				require.NoError(t, err)
+
+				httpClient.EXPECT().Request(gomock.Any(), req).
+					Return(&httpclient.HTTPResponse{
+						Body:       responseBody,
+						StatusCode: tt.responseStatus,
+					}).Times(1)
+			}
+
+			gw := gateway.New(gateway.Config{
 				ServiceAddress: "localhost:1234",
 				FactoryID:      factoryID,
 				HttpClient:     httpClient,
 			})
 			zReport := &zReport{
-				gateway: gateway,
+				gateway: gw,
 			}
 
-			info, err := zReport.GetZReportInfo(ctx, 0)
+			info, err := zReport.GetCurrentZReportInfo(ctx)
 
 			if tt.expectedError != "" {
 				require.Error(t, err)
@@ -291,6 +331,7 @@ func TestZReportInfo(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, tt.expectedResponse.OpenTime, info.OpenTime)
+				assert.Equal(t, tt.expectedResponse.ZReportIndex, info.ZReportIndex)
 				assert.Equal(t, tt.expectedResponse.CloseTime, info.CloseTime)
 				assert.Equal(t, tt.expectedResponse.TerminalID, info.TerminalID)
 				assert.Equal(t, tt.expectedResponse.TotalSaleCount, info.TotalSaleCount)
