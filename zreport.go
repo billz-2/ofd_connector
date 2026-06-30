@@ -14,16 +14,17 @@ import (
 )
 
 const (
-	zReportCloseEndpoint = "/FiscalDrive/ZReport/Close/"
-	zReportInfoEndpoint  = "/FiscalDrive/ZReport/Info/"
-	zReportOpenEndpoint  = "/FiscalDrive/ZReport/Open/"
-	zReportSyncEndpoint  = "/DataBase/Files/Sync/ZReports/"
+	zReportCloseEndpoint     = "/FiscalDrive/ZReport/Close/"
+	zReportInfoEndpoint      = "/FiscalDrive/ZReport/Info/"
+	zReportOpenEndpoint      = "/FiscalDrive/ZReport/Open/"
+	zReportSyncEndpoint      = "/DataBase/Files/Sync/ZReports/"
+	fiscalMemoryInfoEndpoint = "/FiscalDrive/FiscalMemory/Info/"
 )
 
 type ZReportI interface {
 	OpenZreport(ctx context.Context, createdTime string) error
 	CloseZreport(ctx context.Context, closedTime string) error
-	GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo, error)
+	GetCurrentZReportInfo(ctx context.Context) (ZReportInfo, error)
 	SyncZReports(ctx context.Context, itemsCount uint16) error
 }
 
@@ -46,7 +47,12 @@ type indexInfo struct {
 	Index uint32 `json:"Index"`
 }
 
+type fiscalMemoryInfoResp struct {
+	ZReportsCount uint32 `json:"ZReportsCount"`
+}
+
 type ZReportInfo struct {
+	ZReportIndex     uint32      `json:"ZReportIndex"`
 	TerminalID       string      `json:"TerminalID"`
 	OpenTime         string      `json:"OpenTime"`
 	CloseTime        string      `json:"CloseTime"`
@@ -155,10 +161,50 @@ func (o zReport) CloseZreport(ctx context.Context, closedTime string) error {
 	return nil
 }
 
-// GetZReportInfo returns the Zreport info for the fiscal drive
-// index 0-current zReport, 1-previous zReport, 2-before previous zReport, etc.
-func (o zReport) GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo, error) {
-	bodyBytes, err := json.Marshal(indexInfo{Index: index})
+func (o zReport) getFiscalMemoryInfo(ctx context.Context) (fiscalMemoryInfoResp, error) {
+	endpoint := o.gateway.FactoryEndpoint(fiscalMemoryInfoEndpoint)
+	resp, err := o.gateway.HTTPRequest(
+		ctx,
+		endpoint,
+		http.MethodGet,
+		constants.ContentTypeJSON,
+		nil,
+		nil,
+	)
+	if err != nil {
+		return fiscalMemoryInfoResp{}, fmt.Errorf("error fetching fiscal memory info: %s", err.Error())
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		errorResp := errorResponse{}
+		if err := json.Unmarshal(resp.Body, &errorResp); err != nil {
+			return fiscalMemoryInfoResp{}, fmt.Errorf("error unmarshalling error response: %s responseBody: %s",
+				err.Error(),
+				string(resp.Body),
+			)
+		}
+		return fiscalMemoryInfoResp{}, fmt.Errorf("failed to get fiscal memory info: %s", errorResp.Reason)
+	}
+
+	info := fiscalMemoryInfoResp{}
+	if err := json.Unmarshal(resp.Body, &info); err != nil {
+		return fiscalMemoryInfoResp{}, fmt.Errorf("error unmarshalling fiscal memory info: %s", err.Error())
+	}
+	return info, nil
+}
+
+// GetCurrentZReportInfo returns the last closed ZReport info for the fiscal drive.
+// The index param is kept for backward compatibility but is no longer used;
+// the index is derived from FiscalMemory/Info as ZReportsCount-1.
+func (o zReport) GetCurrentZReportInfo(ctx context.Context) (ZReportInfo, error) {
+	memInfo, err := o.getFiscalMemoryInfo(ctx)
+	if err != nil {
+		return ZReportInfo{}, err
+	}
+
+	zReportIndex := memInfo.ZReportsCount - 1
+
+	bodyBytes, err := json.Marshal(indexInfo{Index: zReportIndex})
 	if err != nil {
 		return ZReportInfo{}, fmt.Errorf("error marshalling body: %s", err.Error())
 	}
@@ -192,6 +238,7 @@ func (o zReport) GetZReportInfo(ctx context.Context, index uint32) (ZReportInfo,
 	if err := json.Unmarshal(resp.Body, &zReportInfo); err != nil {
 		return ZReportInfo{}, fmt.Errorf("error unmarshalling response: %s", err.Error())
 	}
+	zReportInfo.ZReportIndex = zReportIndex
 
 	return zReportInfo, nil
 }
