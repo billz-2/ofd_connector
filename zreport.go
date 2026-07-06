@@ -109,6 +109,9 @@ func (o zReport) OpenZreport(ctx context.Context, createdTime string) error {
 				string(resp.Body),
 			)
 		}
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
+		}
 		return fmt.Errorf("failed to open Z report: %s", errorResp.Reason)
 	}
 
@@ -155,6 +158,9 @@ func (o zReport) CloseZreport(ctx context.Context, closedTime string) error {
 				string(resp.Body),
 			)
 		}
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
+		}
 		return fmt.Errorf("failed to close Z report: %s", errorResp.Reason)
 	}
 
@@ -182,6 +188,9 @@ func (o zReport) getFiscalMemoryInfo(ctx context.Context) (fiscalMemoryInfoResp,
 				err.Error(),
 				string(resp.Body),
 			)
+		}
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
 		}
 		return fiscalMemoryInfoResp{}, fmt.Errorf("failed to get fiscal memory info: %s", errorResp.Reason)
 	}
@@ -230,7 +239,9 @@ func (o zReport) GetCurrentZReportInfo(ctx context.Context) (ZReportInfo, error)
 				string(resp.Body),
 			)
 		}
-
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
+		}
 		return ZReportInfo{}, fmt.Errorf("failed to get Z report info: %s", errorResp.Reason)
 	}
 
@@ -278,6 +289,9 @@ func (o zReport) SyncZReports(ctx context.Context, itemsCount uint16) error {
 				err.Error(),
 				string(resp.Body),
 			)
+		}
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
 		}
 		return fmt.Errorf("failed to sync Z reports: %s", errorResp.Reason)
 	}

@@ -245,13 +245,14 @@ func TestCurrentZReportInfo(t *testing.T) {
 			},
 		},
 		{
-			name:               "fiscal memory error",
+			name:               "unexpected fiscal memory error",
 			fiscalMemoryStatus: 400,
 			fiscalMemoryBody: errorResponse{
-				Reason: "fiscal memory unavailable",
-				Type:   "errors.errorString",
+				Reason:  "",
+				Type:    "",
+				Message: "unexpected fiscal memory error",
 			},
-			expectedError:    "fiscal memory unavailable",
+			expectedError:    "unexpected fiscal memory error",
 			expectedResponse: nil,
 		},
 		{
