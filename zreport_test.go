@@ -276,7 +276,7 @@ func TestCurrentZReportInfo(t *testing.T) {
 
 			fiscalMemoryReq, err := httpclient.NewHTTPRequest(
 				"localhost:1234/FiscalDrive/FiscalMemory/Info/"+factoryID,
-				http.MethodGet,
+				http.MethodPost,
 				constants.ContentTypeJSON,
 				nil,
 				nil,
@@ -298,7 +298,7 @@ func TestCurrentZReportInfo(t *testing.T) {
 
 				req, err := httpclient.NewHTTPRequest(
 					"localhost:1234/FiscalDrive/ZReport/Info/"+factoryID,
-					http.MethodGet,
+					http.MethodPost,
 					constants.ContentTypeUrlEncoded,
 					indexBody,
 					nil,

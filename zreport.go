@@ -172,7 +172,7 @@ func (o zReport) getFiscalMemoryInfo(ctx context.Context) (fiscalMemoryInfoResp,
 	resp, err := o.gateway.HTTPRequest(
 		ctx,
 		endpoint,
-		http.MethodGet,
+		http.MethodPost,
 		constants.ContentTypeJSON,
 		nil,
 		nil,
@@ -222,7 +222,7 @@ func (o zReport) GetCurrentZReportInfo(ctx context.Context) (ZReportInfo, error)
 	resp, err := o.gateway.HTTPRequest(
 		ctx,
 		endpoint,
-		http.MethodGet,
+		http.MethodPost,
 		constants.ContentTypeUrlEncoded,
 		bodyBytes,
 		nil,
