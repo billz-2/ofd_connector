@@ -179,6 +179,7 @@ func TestZReportClose(t *testing.T) {
 		})
 	}
 }
+
 func TestCurrentZReportInfo(t *testing.T) {
 	const (
 		factoryID     = "12342131231223123123"
@@ -252,6 +253,28 @@ func TestCurrentZReportInfo(t *testing.T) {
 				Type:    "",
 				Message: "unexpected fiscal memory error",
 			},
+			responseBody: ZReportInfo{
+				OpenTime:         "2023-05-31 12:04:00",
+				CloseTime:        "2023-05-31 13:04:00",
+				TerminalID:       "TERM123",
+				TotalSaleCount:   10,
+				TotalRefundCount: 2,
+				TotalCash: TotalAmount{
+					Sale:   1000,
+					Refund: 12,
+				},
+				TotalCard: TotalAmount{
+					Sale:   2000,
+					Refund: 11,
+				},
+				TotalVAT: TotalAmount{
+					Sale:   100,
+					Refund: 12,
+				},
+				FirstReceiptSeq: 1001,
+				LastReceiptSeq:  1012,
+			},
+			responseStatus:   200,
 			expectedError:    "unexpected fiscal memory error",
 			expectedResponse: nil,
 		},
@@ -274,44 +297,44 @@ func TestCurrentZReportInfo(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			httpClient := mock_httpclient.NewMockHTTPClient(ctrl)
 
-			fiscalMemoryReq, err := httpclient.NewHTTPRequest(
-				"localhost:1234/FiscalDrive/FiscalMemory/Info/"+factoryID,
+			indexBody, err := json.Marshal(indexInfo{Index: 0})
+			require.NoError(t, err)
+
+			req, err := httpclient.NewHTTPRequest(
+				"localhost:1234/FiscalDrive/ZReport/Info/"+factoryID,
 				http.MethodPost,
-				constants.ContentTypeJSON,
-				nil,
+				constants.ContentTypeUrlEncoded,
+				indexBody,
 				nil,
 			)
 			require.NoError(t, err)
 
-			fiscalMemoryBody, err := json.Marshal(tt.fiscalMemoryBody)
+			responseBody, err := json.Marshal(tt.responseBody)
 			require.NoError(t, err)
 
-			httpClient.EXPECT().Request(gomock.Any(), fiscalMemoryReq).
+			httpClient.EXPECT().Request(gomock.Any(), req).
 				Return(&httpclient.HTTPResponse{
-					Body:       fiscalMemoryBody,
-					StatusCode: tt.fiscalMemoryStatus,
+					Body:       responseBody,
+					StatusCode: tt.responseStatus,
 				}).Times(1)
 
-			if tt.fiscalMemoryStatus == http.StatusOK {
-				indexBody, err := json.Marshal(indexInfo{Index: zReportsCount - 1})
-				require.NoError(t, err)
-
-				req, err := httpclient.NewHTTPRequest(
-					"localhost:1234/FiscalDrive/ZReport/Info/"+factoryID,
+			if tt.responseStatus == http.StatusOK {
+				fiscalMemoryReq, err := httpclient.NewHTTPRequest(
+					"localhost:1234/FiscalDrive/FiscalMemory/Info/"+factoryID,
 					http.MethodPost,
-					constants.ContentTypeUrlEncoded,
-					indexBody,
+					constants.ContentTypeJSON,
+					nil,
 					nil,
 				)
 				require.NoError(t, err)
 
-				responseBody, err := json.Marshal(tt.responseBody)
+				fiscalMemoryBody, err := json.Marshal(tt.fiscalMemoryBody)
 				require.NoError(t, err)
 
-				httpClient.EXPECT().Request(gomock.Any(), req).
+				httpClient.EXPECT().Request(gomock.Any(), fiscalMemoryReq).
 					Return(&httpclient.HTTPResponse{
-						Body:       responseBody,
-						StatusCode: tt.responseStatus,
+						Body:       fiscalMemoryBody,
+						StatusCode: tt.fiscalMemoryStatus,
 					}).Times(1)
 			}
 

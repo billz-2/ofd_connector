@@ -203,17 +203,8 @@ func (o zReport) getFiscalMemoryInfo(ctx context.Context) (fiscalMemoryInfoResp,
 }
 
 // GetCurrentZReportInfo returns the last closed ZReport info for the fiscal drive.
-// The index param is kept for backward compatibility but is no longer used;
-// the index is derived from FiscalMemory/Info as ZReportsCount-1.
 func (o zReport) GetCurrentZReportInfo(ctx context.Context) (ZReportInfo, error) {
-	memInfo, err := o.getFiscalMemoryInfo(ctx)
-	if err != nil {
-		return ZReportInfo{}, err
-	}
-
-	zReportIndex := memInfo.ZReportsCount - 1
-
-	bodyBytes, err := json.Marshal(indexInfo{Index: zReportIndex})
+	bodyBytes, err := json.Marshal(indexInfo{Index: 0})
 	if err != nil {
 		return ZReportInfo{}, fmt.Errorf("error marshalling body: %s", err.Error())
 	}
@@ -249,7 +240,13 @@ func (o zReport) GetCurrentZReportInfo(ctx context.Context) (ZReportInfo, error)
 	if err := json.Unmarshal(resp.Body, &zReportInfo); err != nil {
 		return ZReportInfo{}, fmt.Errorf("error unmarshalling response: %s", err.Error())
 	}
-	zReportInfo.ZReportIndex = zReportIndex
+
+	memInfo, err := o.getFiscalMemoryInfo(ctx)
+	if err != nil {
+		return ZReportInfo{}, err
+	}
+
+	zReportInfo.ZReportIndex = memInfo.ZReportsCount - 1
 
 	return zReportInfo, nil
 }
