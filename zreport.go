@@ -109,6 +109,9 @@ func (o zReport) OpenZreport(ctx context.Context, createdTime string) error {
 				string(resp.Body),
 			)
 		}
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
+		}
 		return fmt.Errorf("failed to open Z report: %s", errorResp.Reason)
 	}
 
@@ -155,6 +158,9 @@ func (o zReport) CloseZreport(ctx context.Context, closedTime string) error {
 				string(resp.Body),
 			)
 		}
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
+		}
 		return fmt.Errorf("failed to close Z report: %s", errorResp.Reason)
 	}
 
@@ -166,7 +172,7 @@ func (o zReport) getFiscalMemoryInfo(ctx context.Context) (fiscalMemoryInfoResp,
 	resp, err := o.gateway.HTTPRequest(
 		ctx,
 		endpoint,
-		http.MethodGet,
+		http.MethodPost,
 		constants.ContentTypeJSON,
 		nil,
 		nil,
@@ -183,6 +189,9 @@ func (o zReport) getFiscalMemoryInfo(ctx context.Context) (fiscalMemoryInfoResp,
 				string(resp.Body),
 			)
 		}
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
+		}
 		return fiscalMemoryInfoResp{}, fmt.Errorf("failed to get fiscal memory info: %s", errorResp.Reason)
 	}
 
@@ -194,17 +203,8 @@ func (o zReport) getFiscalMemoryInfo(ctx context.Context) (fiscalMemoryInfoResp,
 }
 
 // GetCurrentZReportInfo returns the last closed ZReport info for the fiscal drive.
-// The index param is kept for backward compatibility but is no longer used;
-// the index is derived from FiscalMemory/Info as ZReportsCount-1.
 func (o zReport) GetCurrentZReportInfo(ctx context.Context) (ZReportInfo, error) {
-	memInfo, err := o.getFiscalMemoryInfo(ctx)
-	if err != nil {
-		return ZReportInfo{}, err
-	}
-
-	zReportIndex := memInfo.ZReportsCount - 1
-
-	bodyBytes, err := json.Marshal(indexInfo{Index: zReportIndex})
+	bodyBytes, err := json.Marshal(indexInfo{Index: 0})
 	if err != nil {
 		return ZReportInfo{}, fmt.Errorf("error marshalling body: %s", err.Error())
 	}
@@ -213,7 +213,7 @@ func (o zReport) GetCurrentZReportInfo(ctx context.Context) (ZReportInfo, error)
 	resp, err := o.gateway.HTTPRequest(
 		ctx,
 		endpoint,
-		http.MethodGet,
+		http.MethodPost,
 		constants.ContentTypeUrlEncoded,
 		bodyBytes,
 		nil,
@@ -230,7 +230,9 @@ func (o zReport) GetCurrentZReportInfo(ctx context.Context) (ZReportInfo, error)
 				string(resp.Body),
 			)
 		}
-
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
+		}
 		return ZReportInfo{}, fmt.Errorf("failed to get Z report info: %s", errorResp.Reason)
 	}
 
@@ -238,7 +240,13 @@ func (o zReport) GetCurrentZReportInfo(ctx context.Context) (ZReportInfo, error)
 	if err := json.Unmarshal(resp.Body, &zReportInfo); err != nil {
 		return ZReportInfo{}, fmt.Errorf("error unmarshalling response: %s", err.Error())
 	}
-	zReportInfo.ZReportIndex = zReportIndex
+
+	memInfo, err := o.getFiscalMemoryInfo(ctx)
+	if err != nil {
+		return ZReportInfo{}, err
+	}
+
+	zReportInfo.ZReportIndex = memInfo.ZReportsCount - 1
 
 	return zReportInfo, nil
 }
@@ -278,6 +286,9 @@ func (o zReport) SyncZReports(ctx context.Context, itemsCount uint16) error {
 				err.Error(),
 				string(resp.Body),
 			)
+		}
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
 		}
 		return fmt.Errorf("failed to sync Z reports: %s", errorResp.Reason)
 	}

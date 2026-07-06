@@ -72,7 +72,9 @@ func (f *fiscalDrive) FiscalDriveInfo(ctx context.Context) (FiscalDriveInfo, err
 				string(resp.Body),
 			)
 		}
-
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
+		}
 		return FiscalDriveInfo{}, fmt.Errorf("failed to get fiscal drive info: %s", errorResp.Reason)
 	}
 

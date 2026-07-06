@@ -23,8 +23,9 @@ type FiscalDriveReaderInfo struct {
 }
 
 type errorResponse struct {
-	Reason string `json:"Reason"`
-	Type   string `json:"Type"`
+	Reason  string `json:"Reason"`
+	Type    string `json:"Type"`
+	Message string `json:"message"`
 }
 
 type FiscalDriveLister interface {
@@ -73,6 +74,9 @@ func (o fiscalDriveLister) ListFiscalDrives(ctx context.Context) ([]FiscalDriveR
 		jsonErr := json.Unmarshal(resp.Body, &errorResp)
 		if jsonErr != nil {
 			return nil, fmt.Errorf("error unmarshalling body: %s", resp.Body) // TODO: Add error code
+		}
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
 		}
 		return nil, fmt.Errorf("error: %s", errorResp.Reason)
 	}

@@ -172,6 +172,9 @@ func (r *receipt) GetTXID(ctx context.Context, params SaleParams) (int64, error)
 				string(resp.Body),
 			)
 		}
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
+		}
 		return 0, fmt.Errorf("failed to get txID: %s", errorResp.Reason)
 	}
 
@@ -211,6 +214,9 @@ func (r *receipt) RegisterTXID(ctx context.Context, txID int64) (ReceiptInfo, er
 				string(resp.Body),
 			)
 		}
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
+		}
 		return ReceiptInfo{}, fmt.Errorf("failed to register txID: %s", errorResp.Reason)
 	}
 
@@ -249,7 +255,9 @@ func (r *receipt) GetReceiptInfo(ctx context.Context, index uint32) (ReceiptFull
 				string(resp.Body),
 			)
 		}
-
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
+		}
 		return ReceiptFullInfo{}, fmt.Errorf("failed to get Z report info: %s", errorResp.Reason)
 	}
 
@@ -290,6 +298,9 @@ func (r *receipt) GetDatabaseFilesCount(ctx context.Context, status uint16) (map
 				string(resp.Body),
 			)
 		}
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
+		}
 		return nil, fmt.Errorf("failed to get db files count: %s", errorResp.Reason)
 	}
 
@@ -325,6 +336,9 @@ func (r *receipt) ResetDatabaseFilesStatus(ctx context.Context, txID int64) erro
 				err.Error(),
 				string(resp.Body),
 			)
+		}
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
 		}
 		return fmt.Errorf("failed to register txID: %s", errorResp.Reason)
 	}
@@ -365,6 +379,9 @@ func (r *receipt) SyncReceipts(ctx context.Context, itemsCount uint16) error {
 				err.Error(),
 				string(resp.Body),
 			)
+		}
+		if errorResp.Reason == "" {
+			errorResp.Reason = "unknown error body:" + string(resp.Body)
 		}
 		return fmt.Errorf("failed to sync receipts: %s", errorResp.Reason)
 	}
