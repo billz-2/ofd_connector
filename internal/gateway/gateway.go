@@ -17,6 +17,7 @@ type Client interface {
 	) (*httpclient.HTTPResponse, error)
 	// FactoryEndpoint returns the endpoint for the given route with factoryID appended to the end
 	FactoryEndpoint(route string) string
+	SetFactoryID(factoryID string)
 }
 
 type gateway struct {
@@ -32,7 +33,7 @@ type Config struct {
 }
 
 func New(config Config) Client {
-	return gateway{
+	return &gateway{
 		serviceAddress: config.ServiceAddress,
 		httpClient:     config.HttpClient,
 		factoryID:      config.FactoryID,
@@ -64,4 +65,7 @@ func (g gateway) HTTPRequest(
 
 func (g gateway) FactoryEndpoint(route string) string {
 	return route + g.factoryID
+}
+func (g *gateway) SetFactoryID(factoryID string) {
+	g.factoryID = factoryID
 }

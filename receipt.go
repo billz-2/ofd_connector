@@ -95,7 +95,7 @@ type Item struct {
 }
 
 type ExtraInfo struct {
-	CarNumber         string `json:"CarNumber"`
+	CardNumber        string `json:"CardNumber"`
 	CardType          int    `json:"CardType"`
 	CashedOutFromCard int64  `json:"CashedOutFromCard"`
 	PhoneNumber       string `json:"PhoneNumber"`
