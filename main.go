@@ -35,6 +35,14 @@ func New(config OfdConnectorConfig) (OfdConnector, error) {
 	if config.FactoryID == "" {
 		return nil, fmt.Errorf("invalid FactoryID")
 	}
+	fiscalDriveLister, err := NewFiscalDriveLister(OfdConnectorConfig{
+		ServiceAddress:        config.ServiceAddress,
+		RequestTimeOutSeconds: config.RequestTimeOutSeconds,
+		FactoryID:             config.FactoryID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create fiscal drive lister: %w", err)
+	}
 
 	httpClient := httpclient.NewHTTPClient(config.RequestTimeOutSeconds)
 	gateway := gateway.New(gateway.Config{
@@ -49,7 +57,8 @@ func New(config OfdConnectorConfig) (OfdConnector, error) {
 		gateway: gateway,
 	})
 	fiscalDrive := newFiscalDrive(fiscalDriveConfig{
-		gateway: gateway,
+		gateway:           gateway,
+		fiscalDriveLister: fiscalDriveLister,
 	})
 
 	return &ofdConnector{

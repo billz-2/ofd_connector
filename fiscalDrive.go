@@ -3,6 +3,7 @@ package ofdconnector
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -19,17 +20,20 @@ type FiscalDriveI interface {
 }
 
 type fiscalDriveConfig struct {
-	gateway gateway.Client
+	gateway           gateway.Client
+	fiscalDriveLister FiscalDriveLister
 }
 
 // ofdConnector implements the OfdConnector interface
 type fiscalDrive struct {
-	gateway gateway.Client
+	gateway           gateway.Client
+	fiscalDriveLister FiscalDriveLister
 }
 
 func newFiscalDrive(config fiscalDriveConfig) FiscalDriveI {
 	return &fiscalDrive{
-		gateway: config.gateway,
+		gateway:           config.gateway,
+		fiscalDriveLister: config.fiscalDriveLister,
 	}
 }
 
@@ -51,6 +55,20 @@ type FiscalDriveInfo struct {
 }
 
 func (f *fiscalDrive) FiscalDriveInfo(ctx context.Context) (FiscalDriveInfo, error) {
+	fiscalDrivesConnected, err := f.fiscalDriveLister.ListFiscalDrives(ctx)
+	if err != nil {
+		return FiscalDriveInfo{}, fmt.Errorf("error listing fiscal drives: %w", err)
+	}
+	// validate if only one smartCard is connected
+	if len(fiscalDrivesConnected) == 0 {
+		return FiscalDriveInfo{}, errors.New("no smartCard connected")
+	}
+	// refresh to the factoryID to the first connected fiscal drive,
+	// when multiple fiscal drives are connected, the first one will be used
+	if len(fiscalDrivesConnected) >= 1 {
+		f.gateway.SetFactoryID(fiscalDrivesConnected[0].FactoryID)
+	}
+
 	endpoint := f.gateway.FactoryEndpoint(fiscalDriveInfoEndpoint)
 	resp, err := f.gateway.HTTPRequest(
 		ctx,
